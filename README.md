@@ -1,5 +1,7 @@
 # OmniAI::Google
 
+[![CircleCI](https://circleci.com/gh/ksylvest/omniai-google.svg?style=svg)](https://circleci.com/gh/ksylvest/omniai-google)
+
 A Google implementation of the [OmniAI](https://github.com/ksylvest/omniai) APIs.
 
 ## Installation
