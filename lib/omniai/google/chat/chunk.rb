@@ -10,7 +10,7 @@ module OmniAI
           @choices ||= [].tap do |choices|
             @data['candidates'].each do |candidate|
               candidate['content']['parts'].each do |part|
-                choices << OmniAI::Chat::Choice.for(data: {
+                choices << OmniAI::Chat::DeltaChoice.for(data: {
                   'index' => candidate['index'],
                   'delta' => { 'role' => candidate['content']['role'], 'content' => part['text'] },
                 })
