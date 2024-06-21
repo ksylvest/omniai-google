@@ -20,29 +20,27 @@ module OmniAI
     #
     #   client = OmniAI::Google::Client.new
     class Client < OmniAI::Client
+      # @!attribute [rw] version
+      #   @return [String, nil]
       attr_accessor :version
 
       # @param api_key [String] optional - defaults to `OmniAI::Google.config.api_key`
       # @param host [String] optional - defaults to `OmniAI::Google.config.host`
       # @param version [String] optional - defaults to `OmniAI::Google.config.version`
       # @param logger [Logger] optional - defaults to `OmniAI::Google.config.logger`
+      # @param timeout [Integer] optional - defaults to `OmniAI::Google.config.timeout`
       def initialize(
         api_key: OmniAI::Google.config.api_key,
         logger: OmniAI::Google.config.logger,
         host: OmniAI::Google.config.host,
-        version: OmniAI::Google.config.version
+        version: OmniAI::Google.config.version,
+        timeout: OmniAI::Google.config.timeout
       )
         raise(ArgumentError, %(ENV['GOOGLE_API_KEY'] must be defined or `api_key` must be passed)) if api_key.nil?
 
-        super(api_key:, logger:)
+        super(api_key:, host:, logger:, timeout:)
 
-        @host = host
         @version = version
-      end
-
-      # @return [HTTP::Client]
-      def connection
-        HTTP.persistent(@host)
       end
 
       # @raise [OmniAI::Error]
