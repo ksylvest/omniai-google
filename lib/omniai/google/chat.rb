@@ -36,20 +36,6 @@ module OmniAI
           }.compact, json: payload)
       end
 
-      # @param response [HTTP::Response]
-      # @return [OmniAI::Google::Chat::Stream]
-      def stream!(response:)
-        raise Error, "#{self.class.name}#stream! unstreamable" unless @stream
-
-        Stream.new(response:).stream! { |chunk| @stream.call(chunk) }
-      end
-
-      # @param response [HTTP::Response]
-      # @param response [OmniAI::Google::Chat::Completion]
-      def complete!(response:)
-        Completion.new(data: response.parse)
-      end
-
       # @return [Hash]
       def payload
         OmniAI::Google.config.chat_options.merge({
