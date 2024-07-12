@@ -21,3 +21,6 @@ Layout/FirstHashElementIndentation:
 
 Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
+
+Metrics/ParameterLists:
+  Enabled: false
