@@ -24,3 +24,6 @@ Layout/FirstArrayElementIndentation:
 
 Metrics/ParameterLists:
   Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
