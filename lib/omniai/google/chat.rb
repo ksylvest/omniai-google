@@ -40,8 +40,18 @@ module OmniAI
       def payload
         OmniAI::Google.config.chat_options.merge({
           contents:,
+          tools:,
           generationConfig: generation_config,
         }).compact
+      end
+
+      # @return [Hash]
+      def tools
+        return unless @tools
+
+        [
+          function_declarations: @tools&.map(&:prepare),
+        ]
       end
 
       # @return [Hash]
