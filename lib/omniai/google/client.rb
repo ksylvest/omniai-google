@@ -45,7 +45,7 @@ module OmniAI
 
       # @raise [OmniAI::Error]
       #
-      # @param messages [String, Array, Hash]
+      # @param messages [String] optional
       # @param model [String] optional
       # @param format [Symbol] optional :text or :json
       # @param temperature [Float, nil] optional
@@ -56,7 +56,7 @@ module OmniAI
       # @yieldparam prompt [OmniAI::Chat::Prompt]
       #
       # @return [OmniAI::Chat::Completion]
-      def chat(messages, model: Chat::Model::GEMINI_PRO, temperature: nil, format: nil, stream: nil, tools: nil, &)
+      def chat(messages = nil, model: Chat::DEFAULT_MODEL, temperature: nil, format: nil, stream: nil, tools: nil, &)
         Chat.process!(messages, model:, temperature:, format:, stream:, tools:, client: self, &)
       end
     end

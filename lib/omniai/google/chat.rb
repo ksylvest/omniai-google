@@ -23,6 +23,8 @@ module OmniAI
         GEMINI_FLASH = GEMINI_1_5_FLASH
       end
 
+      DEFAULT_MODEL = Model::GEMINI_PRO
+
       TEXT_SERIALIZER = lambda do |content, *|
         { text: content.text }
       end
