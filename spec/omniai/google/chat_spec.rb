@@ -45,7 +45,7 @@ RSpec.describe OmniAI::Google::Chat do
         stub_request(:post, "https://generativelanguage.googleapis.com/v1/models/#{model}:generateContent?key=...")
           .with(body: {
             contents: [
-              { role: 'system', parts: [{ text: 'You are a helpful assistant.' }] },
+              { role: 'user', parts: [{ text: 'You are a helpful assistant.' }] },
               { role: 'user', parts: [{ text: 'What is the capital of Canada?' }] },
 
             ],
