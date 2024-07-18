@@ -23,6 +23,46 @@ module OmniAI
         GEMINI_FLASH = GEMINI_1_5_FLASH
       end
 
+      TEXT_SERIALIZER = lambda do |content, *|
+        { text: content.text }
+      end
+
+      # @param [Message]
+      # @return [Hash]
+      # @example
+      #   message = Message.new(...)
+      #   MESSAGE_SERIALIZER.call(message)
+      MESSAGE_SERIALIZER = lambda do |message, context:|
+        parts = message.content.is_a?(String) ? [Text.new(message.content)] : message.content
+
+        {
+          role: message.role,
+          parts: parts.map { |part| part.serialize(context:) },
+        }
+      end
+
+      # @param [Media]
+      # @return [Hash]
+      # @example
+      #   media = Media.new(...)
+      #   MEDIA_SERIALIZER.call(media)
+      MEDIA_SERIALIZER = lambda do |media, *|
+        {
+          inlineData: {
+            mimeType: media.type,
+            data: media.data,
+          },
+        }
+      end
+
+      # @return [Context]
+      CONTEXT = Context.build do |context|
+        context.serializers[:message] = MESSAGE_SERIALIZER
+        context.serializers[:text] = TEXT_SERIALIZER
+        context.serializers[:file] = MEDIA_SERIALIZER
+        context.serializers[:url] = MEDIA_SERIALIZER
+      end
+
       protected
 
       # @return [HTTP::Response]
@@ -67,9 +107,7 @@ module OmniAI
       #
       # @return [Array<Hash>]
       def contents
-        messages.map do |message|
-          { role: message[:role], parts: [{ text: message[:content] }] }
-        end
+        @prompt.serialize(context: CONTEXT)
       end
 
       # @return [String]

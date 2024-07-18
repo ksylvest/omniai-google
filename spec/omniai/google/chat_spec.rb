@@ -35,10 +35,10 @@ RSpec.describe OmniAI::Google::Chat do
 
     context 'with an array prompt' do
       let(:prompt) do
-        [
-          { role: OmniAI::Chat::Role::SYSTEM, content: 'You are a helpful assistant.' },
-          { role: OmniAI::Chat::Role::USER, content: 'What is the capital of Canada?' },
-        ]
+        OmniAI::Chat::Prompt.build do |prompt|
+          prompt.system('You are a helpful assistant.')
+          prompt.user('What is the capital of Canada?')
+        end
       end
 
       before do
@@ -119,6 +119,52 @@ RSpec.describe OmniAI::Google::Chat do
         completion
         expect(chunks.map { |chunk| chunk.choice.delta.content }).to eql(%w[A B])
       end
+    end
+
+    context 'when using files / URLs' do
+      let(:io) { Tempfile.new }
+
+      let(:prompt) do
+        OmniAI::Chat::Prompt.build do |prompt|
+          prompt.user do |message|
+            message.text('What are these photos of?')
+            message.url('https://localhost/cat.jpg', 'image/jpeg')
+            message.url('https://localhost/dog.jpg', 'image/jpeg')
+            message.file(io, 'image/jpeg')
+          end
+        end
+      end
+
+      before do
+        stub_request(:get, 'https://localhost/cat.jpg').to_return(body: 'cat')
+        stub_request(:get, 'https://localhost/dog.jpg').to_return(body: 'dog')
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1/models/#{model}:generateContent?key=...")
+          .with(body: {
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  { text: 'What are these photos of?' },
+                  { inlineData: { mimeType: 'image/jpeg', data: 'Y2F0' } },
+                  { inlineData: { mimeType: 'image/jpeg', data: 'ZG9n' } },
+                  { inlineData: { mimeType: 'image/jpeg', data: '' } },
+                ],
+              },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{
+              index: 0,
+              content: {
+                role: 'assistant',
+                parts: [{ text: 'They are a photo of a cat and a photo of a dog.' }],
+              },
+            }],
+          })
+      end
+
+      it { expect(completion.choice.message.role).to eql('assistant') }
+      it { expect(completion.choice.message.content).to eql('They are a photo of a cat and a photo of a dog.') }
     end
   end
 end
