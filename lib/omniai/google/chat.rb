@@ -36,9 +36,10 @@ module OmniAI
       #   MESSAGE_SERIALIZER.call(message)
       MESSAGE_SERIALIZER = lambda do |message, context:|
         parts = message.content.is_a?(String) ? [Text.new(message.content)] : message.content
+        role = message.system? ? Role::USER : message.role
 
         {
-          role: message.role,
+          role:,
           parts: parts.map { |part| part.serialize(context:) },
         }
       end
