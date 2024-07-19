@@ -118,6 +118,40 @@ RSpec.describe OmniAI::Google::Chat do
       end
     end
 
+    context 'when formatting as JSON' do
+      subject(:completion) { described_class.process!(prompt, client:, model:, format: :json) }
+
+      let(:prompt) do
+        OmniAI::Chat::Prompt.build do |prompt|
+          prompt.user('What is the name of the dummer for the Beatles?')
+        end
+      end
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=sse&key=...")
+          .with(body: {
+            generationConfig: { responseMimeType: 'application/json' },
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: 'What is the name of the dummer for the Beatles?' }],
+              },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{
+              index: 0,
+              content: {
+                role: 'assistant',
+                parts: [{ text: '{ "name": "Ringo" }' }],
+              },
+            }],
+          })
+      end
+
+      it { expect(completion.text).to eql('{ "name": "Ringo" }') }
+    end
+
     context 'when using files / URLs' do
       let(:io) { Tempfile.new }
 
