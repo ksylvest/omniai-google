@@ -25,6 +25,8 @@ module OmniAI
 
       DEFAULT_MODEL = Model::GEMINI_PRO
 
+      JSON_MIME_TYPE = 'application/json'
+
       # @return [Context]
       CONTEXT = Context.build do |context|
         context.serializers[:text] = TextSerializer.method(:serialize)
@@ -98,9 +100,14 @@ module OmniAI
 
       # @return [Hash]
       def generation_config
-        return unless @temperature
+        response_mime_type = (JSON_MIME_TYPE if @format.eql?(:json))
 
-        { temperature: @temperature }.compact
+        return unless @temperature || response_mime_type
+
+        {
+          temperature: @temperature,
+          responseMimeType: response_mime_type,
+        }.compact
       end
 
       # @return [String]
