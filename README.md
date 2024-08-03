@@ -33,7 +33,7 @@ Global configuration is supported for the following options:
 ```ruby
 OmniAI::Google.configure do |config|
   config.api_key = 'sk-...' # default: ENV['GOOGLE_API_KEY']
-  config.host = '...' # default: 'https://generativelanguage.googleapis.com'
+  config.project_id = '...' # w/ a project_id uses Vertex AI | w/o a project_id uses Google AI
   config.version = 'v1beta' # default: 'v1'
 end
 ```
@@ -100,3 +100,12 @@ client.chat('Be poetic.', stream:)
 ```
 
 [Google API Reference `stream`](https://ai.google.dev/gemini-api/docs/api-overview#stream)
+
+### Embed
+
+Text can be converted into a vector embedding for similarity comparison usage via:
+
+```ruby
+response = client.embed('The quick brown fox jumps over a lazy dog.')
+response.embedding # [0.0, ...]
+```

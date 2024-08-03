@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'event_stream_parser'
+require 'googleauth'
 require 'omniai'
 require 'zeitwerk'
 
