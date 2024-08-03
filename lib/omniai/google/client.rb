@@ -68,6 +68,23 @@ module OmniAI
       def upload(io)
         Upload.process!(client: self, io:)
       end
+
+      # @raise [OmniAI::Error]
+      #
+      # @param input [String, Array<String>, Array<Integer>] required
+      # @param model [String] optional
+      def embed(input, model: Embed::DEFAULT_MODEL)
+        Embed.process!(input, model:, client: self)
+      end
+
+      # @return [String]
+      def path
+        if @project_id
+          "/#{@version}/projects/#{@project_id}/locations/#{@location}/publishers/google"
+        else
+          "/#{@version}"
+        end
+      end
     end
   end
 end
