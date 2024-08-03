@@ -11,6 +11,14 @@ RSpec.describe OmniAI::Google::Client do
     end
   end
 
+  describe '#embed' do
+    it 'proxies' do
+      allow(OmniAI::Google::Embed).to receive(:process!)
+      client.embed('Hello!')
+      expect(OmniAI::Google::Embed).to have_received(:process!)
+    end
+  end
+
   describe '#upload' do
     let(:io) { StringIO.new('Hello!') }
 
