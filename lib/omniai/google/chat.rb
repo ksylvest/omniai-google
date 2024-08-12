@@ -25,48 +25,46 @@ module OmniAI
 
       DEFAULT_MODEL = Model::GEMINI_PRO
 
-      TEXT_SERIALIZER = lambda do |content, *|
-        { text: content.text }
-      end
-
-      # @param [Message]
-      # @return [Hash]
-      # @example
-      #   message = Message.new(...)
-      #   MESSAGE_SERIALIZER.call(message)
-      MESSAGE_SERIALIZER = lambda do |message, context:|
-        parts = message.content.is_a?(String) ? [Text.new(message.content)] : message.content
-        role = message.system? ? Role::USER : message.role
-
-        {
-          role:,
-          parts: parts.map { |part| part.serialize(context:) },
-        }
-      end
-
-      # @param [Media]
-      # @return [Hash]
-      # @example
-      #   media = Media.new(...)
-      #   MEDIA_SERIALIZER.call(media)
-      MEDIA_SERIALIZER = lambda do |media, *|
-        {
-          inlineData: {
-            mimeType: media.type,
-            data: media.data,
-          },
-        }
-      end
-
       # @return [Context]
       CONTEXT = Context.build do |context|
-        context.serializers[:message] = MESSAGE_SERIALIZER
-        context.serializers[:text] = TEXT_SERIALIZER
-        context.serializers[:file] = MEDIA_SERIALIZER
-        context.serializers[:url] = MEDIA_SERIALIZER
+        context.serializers[:text] = TextSerializer.method(:serialize)
+        context.deserializers[:text] = TextSerializer.method(:deserialize)
+
+        context.serializers[:file] = MediaSerializer.method(:serialize)
+        context.serializers[:url] = MediaSerializer.method(:serialize)
+
+        context.serializers[:tool_call] = ToolCallSerializer.method(:serialize)
+        context.deserializers[:tool_call] = ToolCallSerializer.method(:deserialize)
+
+        context.serializers[:tool_call_result] = ToolCallResultSerializer.method(:serialize)
+        context.deserializers[:tool_call_result] = ToolCallResultSerializer.method(:deserialize)
+
+        context.serializers[:function] = FunctionSerializer.method(:serialize)
+        context.deserializers[:function] = FunctionSerializer.method(:deserialize)
+
+        context.serializers[:usage] = UsageSerializer.method(:serialize)
+        context.deserializers[:usage] = UsageSerializer.method(:deserialize)
+
+        context.serializers[:payload] = PayloadSerializer.method(:serialize)
+        context.deserializers[:payload] = PayloadSerializer.method(:deserialize)
+
+        context.serializers[:choice] = ChoiceSerializer.method(:serialize)
+        context.deserializers[:choice] = ChoiceSerializer.method(:deserialize)
+
+        context.serializers[:message] = MessageSerializer.method(:serialize)
+        context.deserializers[:message] = MessageSerializer.method(:deserialize)
+
+        context.deserializers[:content] = ContentSerializer.method(:deserialize)
+
+        context.serializers[:tool] = ToolSerializer.method(:serialize)
       end
 
       protected
+
+      # @return [Context]
+      def context
+        CONTEXT
+      end
 
       # @return [HTTP::Response]
       def request!
@@ -82,7 +80,8 @@ module OmniAI
       # @return [Hash]
       def payload
         OmniAI::Google.config.chat_options.merge({
-          contents:,
+          system_instruction: @prompt.messages.find(&:system?)&.serialize(context:),
+          contents: @prompt.messages.reject(&:system?).map { |message| message.serialize(context:) },
           tools:,
           generationConfig: generation_config,
         }).compact
@@ -93,7 +92,7 @@ module OmniAI
         return unless @tools
 
         [
-          function_declarations: @tools&.map(&:prepare),
+          function_declarations: @tools.map { |tool| tool.serialize(context:) },
         ]
       end
 
@@ -104,15 +103,6 @@ module OmniAI
         { temperature: @temperature }.compact
       end
 
-      # Example:
-      #
-      #   [{ role: 'user', parts: [{ text: '...' }] }]
-      #
-      # @return [Array<Hash>]
-      def contents
-        @prompt.serialize(context: CONTEXT)
-      end
-
       # @return [String]
       def path
         "/#{@client.version}/models/#{@model}:#{operation}"
@@ -121,6 +111,15 @@ module OmniAI
       # @return [String]
       def operation
         @stream ? 'streamGenerateContent' : 'generateContent'
+      end
+
+      # @return [Array<Message>]
+      def build_tool_call_messages(tool_call_list)
+        content = tool_call_list.map do |tool_call|
+          ToolCallResult.new(tool_call_id: tool_call.id, content: execute_tool_call(tool_call))
+        end
+
+        [Message.new(role: 'function', content:)]
       end
     end
   end

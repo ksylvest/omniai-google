@@ -15,12 +15,11 @@ RSpec.describe OmniAI::Google::Chat do
         stub_request(:post, "https://generativelanguage.googleapis.com/v1/models/#{model}:generateContent?key=...")
           .with(body: {
             contents: [
-              { role: 'user', parts: [{ text: prompt }] },
+              { role: 'user', parts: [{ text: 'Tell me a joke!' }] },
             ],
           })
           .to_return_json(body: {
             candidates: [{
-              index: 0,
               content: {
                 role: 'assistant',
                 parts: [{ text: 'Two elephants fall off a cliff. Boom! Boom!' }],
@@ -29,14 +28,13 @@ RSpec.describe OmniAI::Google::Chat do
           })
       end
 
-      it { expect(completion.choice.message.role).to eql('assistant') }
-      it { expect(completion.choice.message.content).to eql('Two elephants fall off a cliff. Boom! Boom!') }
+      it { expect(completion.text).to eql('Two elephants fall off a cliff. Boom! Boom!') }
     end
 
     context 'with an array prompt' do
       let(:prompt) do
         OmniAI::Chat::Prompt.build do |prompt|
-          prompt.system('You are a helpful assistant.')
+          prompt.system('You are an expert in geography.')
           prompt.user('What is the capital of Canada?')
         end
       end
@@ -44,15 +42,17 @@ RSpec.describe OmniAI::Google::Chat do
       before do
         stub_request(:post, "https://generativelanguage.googleapis.com/v1/models/#{model}:generateContent?key=...")
           .with(body: {
-            contents: [
-              { role: 'user', parts: [{ text: 'You are a helpful assistant.' }] },
-              { role: 'user', parts: [{ text: 'What is the capital of Canada?' }] },
-
-            ],
+            system_instruction: {
+              role: 'system',
+              parts: [{ text: 'You are an expert in geography.' }],
+            },
+            contents: [{
+              role: 'user',
+              parts: [{ text: 'What is the capital of Canada?' }],
+            }],
           })
           .to_return_json(body: {
             candidates: [{
-              index: 0,
               content: {
                 role: 'assistant',
                 parts: [{ text: 'The capital of Canada is Ottawa.' }],
@@ -61,8 +61,7 @@ RSpec.describe OmniAI::Google::Chat do
           })
       end
 
-      it { expect(completion.choice.message.role).to eql('assistant') }
-      it { expect(completion.choice.message.content).to eql('The capital of Canada is Ottawa.') }
+      it { expect(completion.text).to eql('The capital of Canada is Ottawa.') }
     end
 
     context 'with a temperature' do
@@ -81,7 +80,6 @@ RSpec.describe OmniAI::Google::Chat do
           })
           .to_return_json(body: {
             candidates: [{
-              index: 0,
               content: {
                 role: 'assistant',
                 parts: [{ text: '3' }],
@@ -90,8 +88,7 @@ RSpec.describe OmniAI::Google::Chat do
           })
       end
 
-      it { expect(completion.choice.message.role).to eql('assistant') }
-      it { expect(completion.choice.message.content).to eql('3') }
+      it { expect(completion.text).to eql('3') }
     end
 
     context 'when streaming' do
@@ -117,7 +114,7 @@ RSpec.describe OmniAI::Google::Chat do
         chunks = []
         allow(stream).to receive(:call) { |chunk| chunks << chunk }
         completion
-        expect(chunks.map { |chunk| chunk.choice.delta.content }).to eql(%w[A B])
+        expect(chunks.map(&:text)).to eql(%w[A B])
       end
     end
 
@@ -154,7 +151,6 @@ RSpec.describe OmniAI::Google::Chat do
           })
           .to_return_json(body: {
             candidates: [{
-              index: 0,
               content: {
                 role: 'assistant',
                 parts: [{ text: 'They are a photo of a cat and a photo of a dog.' }],
@@ -163,8 +159,7 @@ RSpec.describe OmniAI::Google::Chat do
           })
       end
 
-      it { expect(completion.choice.message.role).to eql('assistant') }
-      it { expect(completion.choice.message.content).to eql('They are a photo of a cat and a photo of a dog.') }
+      it { expect(completion.text).to eql('They are a photo of a cat and a photo of a dog.') }
     end
   end
 end

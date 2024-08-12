@@ -4,8 +4,13 @@ module OmniAI
   module Google
     # Configuration for Google.
     class Config < OmniAI::Config
+      module Version
+        STABLE = 'v1'
+        BETA = 'v1beta'
+      end
+
       DEFAULT_HOST = 'https://generativelanguage.googleapis.com'
-      DEFAULT_VERSION = 'v1'
+      DEFAULT_VERSION = Version::STABLE
 
       # @!attribute [rw] version
       #   @return [String, nil]
