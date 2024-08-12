@@ -10,6 +10,12 @@ RSpec/SpecFilePathFormat:
   CustomTransform:
     OmniAI: omniai
 
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
+Style/EmptyCaseCondition:
+  Enabled: false
+
 Style/TrailingCommaInArrayLiteral:
   EnforcedStyleForMultiline: consistent_comma
 
@@ -26,4 +32,7 @@ Metrics/ParameterLists:
   Enabled: false
 
 Metrics/MethodLength:
+  Enabled: false
+
+Metrics/AbcSize:
   Enabled: false
