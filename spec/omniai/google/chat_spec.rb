@@ -12,7 +12,7 @@ RSpec.describe OmniAI::Google::Chat do
       let(:prompt) { 'Tell me a joke!' }
 
       before do
-        stub_request(:post, "https://generativelanguage.googleapis.com/v1/models/#{model}:generateContent?key=...")
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
           .with(body: {
             contents: [
               { role: 'user', parts: [{ text: 'Tell me a joke!' }] },
@@ -40,7 +40,7 @@ RSpec.describe OmniAI::Google::Chat do
       end
 
       before do
-        stub_request(:post, "https://generativelanguage.googleapis.com/v1/models/#{model}:generateContent?key=...")
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
           .with(body: {
             system_instruction: {
               role: 'system',
@@ -71,7 +71,7 @@ RSpec.describe OmniAI::Google::Chat do
       let(:temperature) { 2.0 }
 
       before do
-        stub_request(:post, "https://generativelanguage.googleapis.com/v1/models/#{model}:generateContent?key=...")
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
           .with(body: {
             generationConfig: { temperature: },
             contents: [
@@ -98,7 +98,7 @@ RSpec.describe OmniAI::Google::Chat do
       let(:stream) { proc { |chunk| } }
 
       before do
-        stub_request(:post, "https://generativelanguage.googleapis.com/v1/models/#{model}:streamGenerateContent?alt=sse&key=...")
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:streamGenerateContent?alt=sse&key=...")
           .with(body: {
             contents: [
               { role: 'user', parts: [{ text: prompt }] },
@@ -135,7 +135,7 @@ RSpec.describe OmniAI::Google::Chat do
       before do
         stub_request(:get, 'https://localhost/cat.jpg').to_return(body: 'cat')
         stub_request(:get, 'https://localhost/dog.jpg').to_return(body: 'dog')
-        stub_request(:post, "https://generativelanguage.googleapis.com/v1/models/#{model}:generateContent?key=...")
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
           .with(body: {
             contents: [
               {
