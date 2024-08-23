@@ -89,7 +89,7 @@ module OmniAI
 
       # @return [Hash]
       def tools
-        return unless @tools
+        return unless @tools&.any?
 
         [
           function_declarations: @tools.map { |tool| tool.serialize(context:) },
