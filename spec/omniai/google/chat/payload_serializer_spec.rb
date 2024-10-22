@@ -21,7 +21,7 @@ RSpec.describe OmniAI::Google::Chat::PayloadSerializer do
             },
           },
         ],
-        usage_metadata: { prompt_token_count: 2, candidates_token_count: 3, total_token_count: 5 },
+        usageMetadata: { promptTokenCount: 2, candidatesTokenCount: 3, totalTokenCount: 5 },
       }
     end
 
@@ -41,7 +41,7 @@ RSpec.describe OmniAI::Google::Chat::PayloadSerializer do
             },
           },
         ],
-        'usage_metadata' => { 'prompt_token_count' => 2, 'candidates_token_count' => 3, 'total_token_count' => 5 },
+        'usageMetadata' => { 'promptTokenCount' => 2, 'candidatesTokenCount' => 3, 'totalTokenCount' => 5 },
       }
     end
 
