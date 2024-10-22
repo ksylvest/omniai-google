@@ -9,18 +9,18 @@ module OmniAI
         # @return [Hash]
         def self.serialize(usage, *)
           {
-            prompt_token_count: usage.input_tokens,
-            candidates_token_count: usage.output_tokens,
-            total_token_count: usage.total_tokens,
+            promptTokenCount: usage.input_tokens,
+            candidatesTokenCount: usage.output_tokens,
+            totalTokenCount: usage.total_tokens,
           }
         end
 
         # @param data [Hash]
         # @return [OmniAI::Chat::Usage]
         def self.deserialize(data, *)
-          input_tokens = data['prompt_token_count']
-          output_tokens = data['candidates_token_count']
-          total_tokens = data['total_token_count']
+          input_tokens = data['promptTokenCount']
+          output_tokens = data['candidatesTokenCount']
+          total_tokens = data['totalTokenCount']
           OmniAI::Chat::Usage.new(input_tokens:, output_tokens:, total_tokens:)
         end
       end
