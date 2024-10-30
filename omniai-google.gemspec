@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.description = 'An implementation of OmniAI for Google'
   spec.homepage = 'https://github.com/ksylvest/omniai-google'
 
-  spec.required_ruby_version = '>= 3.3.0'
+  spec.required_ruby_version = '>= 3.2.0'
 
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['changelog_uri'] = "#{spec.homepage}/releases"
