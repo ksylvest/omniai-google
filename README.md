@@ -1,6 +1,10 @@
 # OmniAI::Google
 
-[![CircleCI](https://circleci.com/gh/ksylvest/omniai-google.svg?style=svg)](https://circleci.com/gh/ksylvest/omniai-google)
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/ksylvest/omniai-google/blob/main/LICENSE)
+[![RubyGems](https://img.shields.io/gem/v/omniai-google)](https://rubygems.org/gems/omniai-google)
+[![GitHub](https://img.shields.io/badge/github-repo-blue.svg)](https://github.com/ksylvest/omniai-google)
+[![Yard](https://img.shields.io/badge/docs-site-blue.svg)](https://omniai-google.ksylvest.com)
+[![CircleCI](https://img.shields.io/circleci/build/github/ksylvest/omniai-google)](https://circleci.com/gh/ksylvest/omniai-google)
 
 A Google implementation of the [OmniAI](https://github.com/ksylvest/omniai) APIs.
 
