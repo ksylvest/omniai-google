@@ -11,6 +11,16 @@ RSpec.describe OmniAI::Google::Client do
     end
   end
 
+  describe '#upload' do
+    let(:io) { StringIO.new('Hello!') }
+
+    it 'proxies' do
+      allow(OmniAI::Google::Upload).to receive(:process!)
+      client.upload(io)
+      expect(OmniAI::Google::Upload).to have_received(:process!)
+    end
+  end
+
   describe '#connection' do
     it { expect(client.connection).to be_a(HTTP::Client) }
   end

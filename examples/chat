@@ -4,7 +4,10 @@
 require 'bundler/setup'
 require 'omniai/google'
 
-CLIENT = OmniAI::Google::Client.new(version: OmniAI::Google::Config::Version::BETA)
+CAT_URL = 'https://images.unsplash.com/photo-1472491235688-bdc81a63246e?fm=jpg'
+DOG_URL = 'https://images.unsplash.com/photo-1517849845537-4d257902454a?fm=jpg'
+
+CLIENT = OmniAI::Google::Client.new
 
 TOOL = OmniAI::Tool.new(
   proc { |location:, unit: 'celsius'| "#{rand(20..50)}° #{unit} in #{location}" },
@@ -18,6 +21,19 @@ TOOL = OmniAI::Tool.new(
     required: %i[location]
   )
 )
+
+def fetch(url:)
+  Tempfile.new.tap do |tempfile|
+    tempfile.binmode
+    response = HTTP.get(url)
+    raise 'HTTP error for url' unless response.status.ok?
+
+    tempfile.write
+
+    response.body.each { |chunk| tempfile.write(chunk) }
+    tempfile.rewind
+  end
+end
 
 def example1(stream: $stdout)
   stream.puts '> [USER] Tell me a joke'
@@ -44,6 +60,26 @@ def example3(stream: $stdout)
   stream.puts response.text
 end
 
-example1
-example2
-example3
+def example4(stream: $stdout)
+  cat_upload = CLIENT.upload(CAT_URL)
+  dog_upload = CLIENT.upload(DOG_URL)
+
+  puts cat_upload.inspect
+  puts dog_upload.inspect
+
+  CLIENT.chat(stream:) do |prompt|
+    prompt.user do |message|
+      message.text 'What animals are in the photos?'
+      message.url(cat_upload.uri, cat_upload.mime_type)
+      message.url(dog_upload.uri, dog_upload.mime_type)
+    end
+  end
+ensure
+  cat_upload&.delete!
+  dog_upload&.delete!
+end
+
+# example1
+# example2
+# example3
+example4

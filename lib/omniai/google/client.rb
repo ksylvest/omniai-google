@@ -59,6 +59,15 @@ module OmniAI
       def chat(messages = nil, model: Chat::DEFAULT_MODEL, temperature: nil, format: nil, stream: nil, tools: nil, &)
         Chat.process!(messages, model:, temperature:, format:, stream:, tools:, client: self, &)
       end
+
+      # @param io [File, String] required - a file or URL
+      #
+      # @raise [OmniAI::Google::Upload::FetchError]
+      #
+      # @return [OmniAI::Google::Upload::File]
+      def upload(io)
+        Upload.process!(client: self, io:)
+      end
     end
   end
 end

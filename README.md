@@ -94,4 +94,29 @@ end
 client.chat('Be poetic.', stream:)
 ```
 
+### Upload
+
+An upload is especially useful when processing audio / image / video / text files. To use:
+
+```ruby
+CAT_URL = 'https://images.unsplash.com/photo-1472491235688-bdc81a63246e?fm=jpg'
+DOG_URL = 'https://images.unsplash.com/photo-1517849845537-4d257902454a?fm=jpg'
+
+begin
+  cat_upload = client.upload(CAT_URL)
+  dog_upload = client.upload(DOG_URL)
+
+  completion = client.chat(stream: $stdout) do |prompt|
+    prompt.user do |message|
+      message.text 'What are these photos of?'
+      message.url(cat_upload.uri, cat_upload.mime_type)
+      message.url(dog_upload.uri, dog_upload.mime_type)
+    end
+  end
+ensure
+  cat_upload.delete!
+  dog_upload.delete!
+end
+```
+
 [Google API Reference `stream`](https://ai.google.dev/gemini-api/docs/api-overview#stream)

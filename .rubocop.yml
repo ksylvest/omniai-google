@@ -21,11 +21,17 @@ Style/TrailingCommaInArrayLiteral:
 Style/TrailingCommaInHashLiteral:
   EnforcedStyleForMultiline: consistent_comma
 
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation
+
 Layout/FirstHashElementIndentation:
   EnforcedStyle: consistent
 
 Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
 
 Metrics/ParameterLists:
   Enabled: false
