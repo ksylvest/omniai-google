@@ -8,14 +8,12 @@ module OmniAI
 
       # @param client [Client]
       # @param io [IO]
-      # @param mime_type [String]
       def self.process!(client:, io:)
         new(client:, io:).process!
       end
 
       # @param client [Client]
-      # @param file [File]
-      # @param mime_type [String]
+      # @param io [File]
       def initialize(client:, io:)
         @client = client
         @io = io
