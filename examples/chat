@@ -22,19 +22,6 @@ TOOL = OmniAI::Tool.new(
   )
 )
 
-def fetch(url:)
-  Tempfile.new.tap do |tempfile|
-    tempfile.binmode
-    response = HTTP.get(url)
-    raise 'HTTP error for url' unless response.status.ok?
-
-    tempfile.write
-
-    response.body.each { |chunk| tempfile.write(chunk) }
-    tempfile.rewind
-  end
-end
-
 def example1(stream: $stdout)
   stream.puts '> [USER] Tell me a joke'
   response = CLIENT.chat('Tell me a joke')
@@ -79,7 +66,7 @@ ensure
   dog_upload&.delete!
 end
 
-# example1
-# example2
-# example3
+example1
+example2
+example3
 example4
