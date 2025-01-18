@@ -3,14 +3,14 @@
 RSpec.describe OmniAI::Google::Chat::UsageSerializer do
   let(:context) { OmniAI::Google::Chat::CONTEXT }
 
-  describe '.deserialize' do
+  describe ".deserialize" do
     subject(:deserialize) { described_class.deserialize(data, context:) }
 
     let(:data) do
       {
-        'promptTokenCount' => 2,
-        'candidatesTokenCount' => 3,
-        'totalTokenCount' => 5,
+        "promptTokenCount" => 2,
+        "candidatesTokenCount" => 3,
+        "totalTokenCount" => 5,
       }
     end
 
@@ -20,7 +20,7 @@ RSpec.describe OmniAI::Google::Chat::UsageSerializer do
     it { expect(deserialize.total_tokens).to be(5) }
   end
 
-  describe '.serialize' do
+  describe ".serialize" do
     subject(:serialize) { described_class.serialize(usage, context:) }
 
     let(:usage) { OmniAI::Chat::Usage.new(input_tokens: 2, output_tokens: 3, total_tokens: 5) }

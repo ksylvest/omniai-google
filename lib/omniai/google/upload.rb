@@ -26,16 +26,16 @@ module OmniAI
         response = io! do |io|
           response = @client
             .connection
-            .headers({ 'X-Goog-Upload-Protocol' => 'raw' })
+            .headers({ "X-Goog-Upload-Protocol" => "raw" })
             .post("/upload/#{@client.version}/files?key=#{@client.api_key}", body: HTTP::FormData::File.new(io))
         end
 
         raise OmniAI::HTTPError, response.flush unless response.status.ok?
 
-        File.parse(client: @client, data: response.parse['file'])
+        File.parse(client: @client, data: response.parse["file"])
       end
 
-      protected
+    protected
 
       # @raise [FetchError]
       #

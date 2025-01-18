@@ -14,7 +14,7 @@ module OmniAI
         # @param data [Hash]
         # @return [OmniAI::Chat::Text]
         def self.deserialize(data, *)
-          OmniAI::Chat::Text.new(data['text'])
+          OmniAI::Chat::Text.new(data["text"])
         end
       end
     end

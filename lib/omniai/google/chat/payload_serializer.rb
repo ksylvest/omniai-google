@@ -22,8 +22,8 @@ module OmniAI
         # @param context [OmniAI::Context]
         # @return [OmniAI::Chat::Payload]
         def self.deserialize(data, context:)
-          choices = data['candidates'].map { |candidate| OmniAI::Chat::Choice.deserialize(candidate, context:) }
-          usage = OmniAI::Chat::Usage.deserialize(data['usageMetadata'], context:) if data['usageMetadata']
+          choices = data["candidates"].map { |candidate| OmniAI::Chat::Choice.deserialize(candidate, context:) }
+          usage = OmniAI::Chat::Usage.deserialize(data["usageMetadata"], context:) if data["usageMetadata"]
 
           OmniAI::Chat::Payload.new(choices:, usage:)
         end

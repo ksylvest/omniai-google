@@ -30,10 +30,10 @@ module OmniAI
         def self.parse(client:, data:)
           new(
             client: client,
-            name: data['name'],
-            uri: data['uri'],
-            state: data['state'],
-            mime_type: data['mimeType']
+            name: data["name"],
+            uri: data["uri"],
+            state: data["state"],
+            mime_type: data["mimeType"]
           )
         end
 

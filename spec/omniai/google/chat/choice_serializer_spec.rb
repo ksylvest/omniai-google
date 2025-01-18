@@ -3,23 +3,23 @@
 RSpec.describe OmniAI::Google::Chat::ChoiceSerializer do
   let(:context) { OmniAI::Google::Chat::CONTEXT }
 
-  describe '.serialize' do
+  describe ".serialize" do
     subject(:serialize) { described_class.serialize(choice, context:) }
 
     let(:choice) { OmniAI::Chat::Choice.new(message:) }
-    let(:message) { OmniAI::Chat::Message.new(role: 'user', content: 'Greetings!') }
+    let(:message) { OmniAI::Chat::Message.new(role: "user", content: "Greetings!") }
 
-    it { is_expected.to eql(content: { role: 'user', parts: [{ text: 'Greetings!' }] }) }
+    it { is_expected.to eql(content: { role: "user", parts: [{ text: "Greetings!" }] }) }
   end
 
-  describe '.deserialize' do
+  describe ".deserialize" do
     subject(:deserialize) { described_class.deserialize(data, context:) }
 
     let(:data) do
       {
-        'content' => {
-          'role' => 'user',
-          'parts' => [{ 'text' => 'Greetings!' }],
+        "content" => {
+          "role" => "user",
+          "parts" => [{ "text" => "Greetings!" }],
         },
       }
     end

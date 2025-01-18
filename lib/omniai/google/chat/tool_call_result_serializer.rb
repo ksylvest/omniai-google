@@ -22,8 +22,8 @@ module OmniAI
         # @param data [Hash]
         # @return [ToolCallResult]
         def self.deserialize(data, *)
-          tool_call_id = data['functionResponse']['name']
-          content = data['functionResponse']['response']['content']
+          tool_call_id = data["functionResponse"]["name"]
+          content = data["functionResponse"]["response"]["content"]
           OmniAI::Chat::ToolCallResult.new(content:, tool_call_id:)
         end
       end

@@ -10,8 +10,8 @@ module OmniAI
         # @return [OmniAI::Chat::Text, OmniAI::Chat::ToolCall]
         def self.deserialize(data, context:)
           case
-          when data['text'] then data['text']
-          when data['functionCall'] then OmniAI::Chat::ToolCall.deserialize(data, context:)
+          when data["text"] then data["text"]
+          when data["functionCall"] then OmniAI::Chat::ToolCall.deserialize(data, context:)
           end
         end
       end
