@@ -5,11 +5,11 @@ module OmniAI
     # Configuration for Google.
     class Config < OmniAI::Config
       module Version
-        STABLE = 'v1'
-        BETA = 'v1beta'
+        STABLE = "v1"
+        BETA = "v1beta"
       end
 
-      DEFAULT_HOST = 'https://generativelanguage.googleapis.com'
+      DEFAULT_HOST = "https://generativelanguage.googleapis.com"
       DEFAULT_VERSION = Version::BETA
 
       # @!attribute [rw] version
@@ -22,9 +22,9 @@ module OmniAI
       # @param logger [Logger, nil] optional - defaults to
       # @param timeout [Integer, Hash, nil] optional
       def initialize(
-        api_key: ENV.fetch('GOOGLE_API_KEY', nil),
-        host: ENV.fetch('GOOGLE_HOST', DEFAULT_HOST),
-        version: ENV.fetch('GOOGLE_VERSION', DEFAULT_VERSION),
+        api_key: ENV.fetch("GOOGLE_API_KEY", nil),
+        host: ENV.fetch("GOOGLE_HOST", DEFAULT_HOST),
+        version: ENV.fetch("GOOGLE_VERSION", DEFAULT_VERSION),
         logger: nil,
         timeout: nil
       )

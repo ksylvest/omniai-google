@@ -13,19 +13,19 @@ module OmniAI
     #   chat.completion([{ role: 'system', content: 'Tell me a joke.' }])
     class Chat < OmniAI::Chat
       module Model
-        GEMINI_1_0_PRO = 'gemini-1.0-pro'
-        GEMINI_1_5_PRO = 'gemini-1.5-pro'
-        GEMINI_1_5_FLASH = 'gemini-1.5-flash'
-        GEMINI_1_0_PRO_LATEST = 'gemini-1.0-pro-latest'
-        GEMINI_1_5_PRO_LATEST = 'gemini-1.5-pro-latest'
-        GEMINI_1_5_FLASH_LATEST = 'gemini-1.5-flash-latest'
+        GEMINI_1_0_PRO = "gemini-1.0-pro"
+        GEMINI_1_5_PRO = "gemini-1.5-pro"
+        GEMINI_1_5_FLASH = "gemini-1.5-flash"
+        GEMINI_1_0_PRO_LATEST = "gemini-1.0-pro-latest"
+        GEMINI_1_5_PRO_LATEST = "gemini-1.5-pro-latest"
+        GEMINI_1_5_FLASH_LATEST = "gemini-1.5-flash-latest"
         GEMINI_PRO = GEMINI_1_5_PRO
         GEMINI_FLASH = GEMINI_1_5_FLASH
       end
 
       DEFAULT_MODEL = Model::GEMINI_PRO
 
-      JSON_MIME_TYPE = 'application/json'
+      JSON_MIME_TYPE = "application/json"
 
       # @return [Context]
       CONTEXT = Context.build do |context|
@@ -61,7 +61,7 @@ module OmniAI
         context.serializers[:tool] = ToolSerializer.method(:serialize)
       end
 
-      protected
+    protected
 
       # @return [Context]
       def context
@@ -75,7 +75,7 @@ module OmniAI
           .accept(:json)
           .post(path, params: {
             key: @client.api_key,
-            alt: ('sse' if @stream),
+            alt: ("sse" if @stream),
           }.compact, json: payload)
       end
 
@@ -123,7 +123,7 @@ module OmniAI
 
       # @return [String]
       def operation
-        @stream ? 'streamGenerateContent' : 'generateContent'
+        @stream ? "streamGenerateContent" : "generateContent"
       end
 
       # @return [Array<Message>]
@@ -132,7 +132,7 @@ module OmniAI
           ToolCallResult.new(tool_call_id: tool_call.id, content: execute_tool_call(tool_call))
         end
 
-        [Message.new(role: 'function', content:)]
+        [Message.new(role: "function", content:)]
       end
     end
   end

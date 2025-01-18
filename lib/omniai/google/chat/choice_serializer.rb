@@ -17,7 +17,7 @@ module OmniAI
         # @param context [Context]
         # @return [OmniAI::Chat::Choice]
         def self.deserialize(data, context:)
-          message = OmniAI::Chat::Message.deserialize(data['content'], context:)
+          message = OmniAI::Chat::Message.deserialize(data["content"], context:)
           OmniAI::Chat::Choice.new(message:)
         end
       end

@@ -24,12 +24,12 @@ module OmniAI
         # @param context [OmniAI::Context]
         # @return [OmniAI::Chat::Message]
         def self.deserialize(data, context:)
-          role = data['role']
-          parts = arrayify(data['parts']).map do |part|
+          role = data["role"]
+          parts = arrayify(data["parts"]).map do |part|
             case
-            when part['text'] then OmniAI::Chat::Text.deserialize(part, context:)
-            when part['functionCall'] then OmniAI::Chat::ToolCall.deserialize(part, context:)
-            when part['functionResponse'] then OmniAI::Chat::ToolCallResult.deserialize(part, context:)
+            when part["text"] then OmniAI::Chat::Text.deserialize(part, context:)
+            when part["functionCall"] then OmniAI::Chat::ToolCall.deserialize(part, context:)
+            when part["functionResponse"] then OmniAI::Chat::ToolCallResult.deserialize(part, context:)
             end
           end
 

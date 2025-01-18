@@ -11,8 +11,8 @@ module OmniAI
     #   response.embedding [0.0, ...]
     class Embed < OmniAI::Embed
       module Model
-        TEXT_EMBEDDING_004 = 'text-embedding-004'
-        TEXT_MULTILINGUAL_EMBEDDING_002 = 'text-multilingual-embedding-002'
+        TEXT_EMBEDDING_004 = "text-embedding-004"
+        TEXT_MULTILINGUAL_EMBEDDING_002 = "text-multilingual-embedding-002"
         EMBEDDING = TEXT_EMBEDDING_004
         MULTILINGUAL_EMBEDDING = TEXT_MULTILINGUAL_EMBEDDING_002
       end
@@ -20,7 +20,7 @@ module OmniAI
       DEFAULT_MODEL = Model::EMBEDDING
 
       EMBEDDINGS_DESERIALIZER = proc do |data, *|
-        data['embeddings'].map { |embedding| embedding['values'] }
+        data["embeddings"].map { |embedding| embedding["values"] }
       end
 
       # @return [Context]
@@ -28,7 +28,7 @@ module OmniAI
         context.deserializers[:embeddings] = EMBEDDINGS_DESERIALIZER
       end
 
-      protected
+    protected
 
       # @param response [HTTP::Response]
       # @return [Response]

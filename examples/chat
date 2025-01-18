@@ -1,21 +1,21 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require 'bundler/setup'
-require 'omniai/google'
+require "bundler/setup"
+require "omniai/google"
 
-CAT_URL = 'https://images.unsplash.com/photo-1472491235688-bdc81a63246e?fm=jpg'
-DOG_URL = 'https://images.unsplash.com/photo-1517849845537-4d257902454a?fm=jpg'
+CAT_URL = "https://images.unsplash.com/photo-1472491235688-bdc81a63246e?fm=jpg"
+DOG_URL = "https://images.unsplash.com/photo-1517849845537-4d257902454a?fm=jpg"
 
 CLIENT = OmniAI::Google::Client.new
 
 TOOL = OmniAI::Tool.new(
-  proc { |location:, unit: 'celsius'| "#{rand(20..50)}° #{unit} in #{location}" },
-  name: 'Weather',
-  description: 'Lookup the weather in a location',
+  proc { |location:, unit: "celsius"| "#{rand(20..50)}° #{unit} in #{location}" },
+  name: "Weather",
+  description: "Lookup the weather in a location",
   parameters: OmniAI::Tool::Parameters.new(
     properties: {
-      location: OmniAI::Tool::Property.string(description: 'e.g. Toronto'),
+      location: OmniAI::Tool::Property.string(description: "e.g. Toronto"),
       unit: OmniAI::Tool::Property.string(enum: %w[celcius farenheit]),
     },
     required: %i[location]
@@ -23,25 +23,25 @@ TOOL = OmniAI::Tool.new(
 )
 
 def example1(stream: $stdout)
-  stream.puts '> [USER] Tell me a joke'
-  response = CLIENT.chat('Tell me a joke')
+  stream.puts "> [USER] Tell me a joke"
+  response = CLIENT.chat("Tell me a joke")
   stream.puts response.text
 end
 
 def example2(stream: $stdout)
-  stream.puts '> [SYSTEM] Respond in both English and French.'
-  stream.puts '> [USER] What is the fastest animal?'
+  stream.puts "> [SYSTEM] Respond in both English and French."
+  stream.puts "> [USER] What is the fastest animal?"
   CLIENT.chat(stream:) do |prompt|
-    prompt.system 'Respond in both English and French.'
-    prompt.user 'What is the fastest animal?'
+    prompt.system "Respond in both English and French."
+    prompt.user "What is the fastest animal?"
   end
 end
 
 def example3(stream: $stdout)
-  stream.puts '> [SYSTEM] You are an expert in weather.'
+  stream.puts "> [SYSTEM] You are an expert in weather."
   stream.puts '> [USER] What is the weather in "London" in celsius and "Madrid" in fahrenheit?'
   response = CLIENT.chat(tools: [TOOL]) do |prompt|
-    prompt.system 'You are an expert in weather.'
+    prompt.system "You are an expert in weather."
     prompt.user 'What is the weather in "London" in celsius and "Madrid" in fahrenheit?'
   end
   stream.puts response.text
@@ -56,7 +56,7 @@ def example4(stream: $stdout)
 
   CLIENT.chat(stream:) do |prompt|
     prompt.user do |message|
-      message.text 'What animals are in the photos?'
+      message.text "What animals are in the photos?"
       message.url(cat_upload.uri, cat_upload.mime_type)
       message.url(dog_upload.uri, dog_upload.mime_type)
     end

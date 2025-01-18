@@ -44,7 +44,7 @@ module OmniAI
         #
         # @return [Boolean]
         def self.use_file_data?(uri)
-          uri.host.eql?('generativelanguage.googleapis.com') || uri.scheme.eql?('gs')
+          uri.host.eql?("generativelanguage.googleapis.com") || uri.scheme.eql?("gs")
         end
       end
     end

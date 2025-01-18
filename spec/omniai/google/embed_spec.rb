@@ -2,17 +2,17 @@
 
 RSpec.describe OmniAI::Google::Embed do
   let(:client) { OmniAI::Google::Client.new }
-  let(:project_id) { 'fake' }
+  let(:project_id) { "fake" }
 
-  describe '.process!' do
+  describe ".process!" do
     subject(:process!) { described_class.process!(text, client:, model:) }
 
-    let(:text) { 'The quick brown fox jumps over a lazy dog.' }
+    let(:text) { "The quick brown fox jumps over a lazy dog." }
     let(:model) { described_class::DEFAULT_MODEL }
     let(:location) { OmniAI::Google::Config::DEFAULT_LOCATION }
 
     before do
-      stub_request(:post, 'https://generativelanguage.googleapis.com//v1beta/models/text-embedding-004:batchEmbedContents?key=...')
+      stub_request(:post, "https://generativelanguage.googleapis.com//v1beta/models/text-embedding-004:batchEmbedContents?key=...")
         .with(body: {
           requests: [
             {

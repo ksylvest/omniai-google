@@ -16,7 +16,7 @@ module OmniAI
         # @param context [OmniAI::Context]
         # @return [OmniAI::Chat::ToolCall]
         def self.deserialize(data, context:)
-          function = OmniAI::Chat::Function.deserialize(data['functionCall'], context:)
+          function = OmniAI::Chat::Function.deserialize(data["functionCall"], context:)
           OmniAI::Chat::ToolCall.new(id: function.name, function:)
         end
       end

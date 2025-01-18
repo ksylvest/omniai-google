@@ -3,12 +3,12 @@
 RSpec.describe OmniAI::Google::Chat::PayloadSerializer do
   let(:context) { OmniAI::Google::Chat::CONTEXT }
 
-  describe '.serialize' do
+  describe ".serialize" do
     subject(:serialize) { described_class.serialize(payload, context:) }
 
     let(:payload) { OmniAI::Chat::Payload.new(choices:, usage:) }
     let(:choices) { [OmniAI::Chat::Choice.new(message:)] }
-    let(:message) { OmniAI::Chat::Message.new(role: 'user', content: 'Greetings!') }
+    let(:message) { OmniAI::Chat::Message.new(role: "user", content: "Greetings!") }
     let(:usage) { OmniAI::Chat::Usage.new(input_tokens: 2, output_tokens: 3, total_tokens: 5) }
 
     let(:data) do
@@ -16,8 +16,8 @@ RSpec.describe OmniAI::Google::Chat::PayloadSerializer do
         candidates: [
           {
             content: {
-              role: 'user',
-              parts: [{ text: 'Greetings!' }],
+              role: "user",
+              parts: [{ text: "Greetings!" }],
             },
           },
         ],
@@ -28,20 +28,20 @@ RSpec.describe OmniAI::Google::Chat::PayloadSerializer do
     it { is_expected.to eql(data) }
   end
 
-  describe '.deserialize' do
+  describe ".deserialize" do
     subject(:deserialize) { described_class.deserialize(data, context:) }
 
     let(:data) do
       {
-        'candidates' => [
+        "candidates" => [
           {
-            'content' => {
-              'role' => 'USER',
-              'parts' => [{ 'text' => 'Greetings!' }],
+            "content" => {
+              "role" => "USER",
+              "parts" => [{ "text" => "Greetings!" }],
             },
           },
         ],
-        'usageMetadata' => { 'promptTokenCount' => 2, 'candidatesTokenCount' => 3, 'totalTokenCount' => 5 },
+        "usageMetadata" => { "promptTokenCount" => 2, "candidatesTokenCount" => 3, "totalTokenCount" => 5 },
       }
     end
 

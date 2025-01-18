@@ -17,8 +17,8 @@ module OmniAI
         # @param data [Hash]
         # @return [OmniAI::Chat::Function]
         def self.deserialize(data, *)
-          name = data['name']
-          arguments = data['args']
+          name = data["name"]
+          arguments = data["args"]
           OmniAI::Chat::Function.new(name:, arguments:)
         end
       end
