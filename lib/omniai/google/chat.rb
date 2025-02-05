@@ -16,9 +16,6 @@ module OmniAI
         GEMINI_1_0_PRO = "gemini-1.0-pro"
         GEMINI_1_5_PRO = "gemini-1.5-pro"
         GEMINI_1_5_FLASH = "gemini-1.5-flash"
-        GEMINI_1_0_PRO_LATEST = "gemini-1.0-pro-latest"
-        GEMINI_1_5_PRO_LATEST = "gemini-1.5-pro-latest"
-        GEMINI_1_5_FLASH_LATEST = "gemini-1.5-flash-latest"
         GEMINI_PRO = GEMINI_1_5_PRO
         GEMINI_FLASH = GEMINI_1_5_FLASH
       end
