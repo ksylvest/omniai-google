@@ -1,9 +1,9 @@
 PATH
   remote: .
   specs:
-    omniai-google (1.9.6)
+    omniai-google (1.9.7)
       event_stream_parser
-      omniai
+      omniai (~> 1.9)
       zeitwerk
 
 GEM
