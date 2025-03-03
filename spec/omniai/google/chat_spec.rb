@@ -95,7 +95,8 @@ RSpec.describe OmniAI::Google::Chat do
       subject(:completion) { described_class.process!(prompt, client:, model:, stream:) }
 
       let(:prompt) { "Tell me a story." }
-      let(:stream) { proc { |chunk| } }
+      let(:stream) { proc { |chunk| chunks << chunk } }
+      let(:chunks) { [] }
 
       before do
         stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:streamGenerateContent?alt=sse&key=...")
@@ -105,17 +106,13 @@ RSpec.describe OmniAI::Google::Chat do
             ],
           })
           .to_return(body: <<~STREAM)
-            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'A' }], role: 'model' }, index: 0 }])}\n
-            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'B' }], role: 'model' }, index: 0 }])}\n
+            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'Hello' }], role: 'model' } }])}\n
+            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: ' ' }], role: 'model' } }])}\n
+            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'World' }], role: 'model' } }])}\n
           STREAM
       end
 
-      it do
-        chunks = []
-        allow(stream).to receive(:call) { |chunk| chunks << chunk }
-        completion
-        expect(chunks.map(&:text)).to eql(%w[A B])
-      end
+      it { expect(completion.text).to eql("Hello World") }
     end
 
     context "when formatting as JSON" do

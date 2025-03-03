@@ -3,14 +3,15 @@
 module OmniAI
   module Google
     class Chat
-      # Overrides payload serialize / deserialize.
-      module PayloadSerializer
-        # @param payload [OmniAI::Chat::Payload]
+      # Overrides response serialize / deserialize.
+      module ResponseSerializer
+        # @param response [OmniAI::Chat::Response]
         # @param context [OmniAI::Context]
+        #
         # @return [Hash]
-        def self.serialize(payload, context:)
-          candidates = payload.choices.map { |choice| choice.serialize(context:) }
-          usage_metadata = payload.usage&.serialize(context:)
+        def self.serialize(response, context:)
+          candidates = response.choices.map { |choice| choice.serialize(context:) }
+          usage_metadata = response.usage&.serialize(context:)
 
           {
             candidates:,
@@ -20,12 +21,13 @@ module OmniAI
 
         # @param data [Hash]
         # @param context [OmniAI::Context]
-        # @return [OmniAI::Chat::Payload]
+        #
+        # @return [OmniAI::Chat::Response]
         def self.deserialize(data, context:)
           choices = data["candidates"].map { |candidate| OmniAI::Chat::Choice.deserialize(candidate, context:) }
           usage = OmniAI::Chat::Usage.deserialize(data["usageMetadata"], context:) if data["usageMetadata"]
 
-          OmniAI::Chat::Payload.new(choices:, usage:)
+          OmniAI::Chat::Response.new(data:, choices:, usage:)
         end
       end
     end
