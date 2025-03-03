@@ -45,8 +45,8 @@ module OmniAI
         context.serializers[:usage] = UsageSerializer.method(:serialize)
         context.deserializers[:usage] = UsageSerializer.method(:deserialize)
 
-        context.serializers[:payload] = PayloadSerializer.method(:serialize)
-        context.deserializers[:payload] = PayloadSerializer.method(:deserialize)
+        context.serializers[:response] = ResponseSerializer.method(:serialize)
+        context.deserializers[:response] = ResponseSerializer.method(:deserialize)
 
         context.serializers[:choice] = ChoiceSerializer.method(:serialize)
         context.deserializers[:choice] = ChoiceSerializer.method(:deserialize)
