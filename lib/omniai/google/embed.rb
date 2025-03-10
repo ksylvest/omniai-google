@@ -12,8 +12,9 @@ module OmniAI
     class Embed < OmniAI::Embed
       module Model
         TEXT_EMBEDDING_004 = "text-embedding-004"
+        TEXT_EMBEDDING_005 = "text-embedding-005"
         TEXT_MULTILINGUAL_EMBEDDING_002 = "text-multilingual-embedding-002"
-        EMBEDDING = TEXT_EMBEDDING_004
+        EMBEDDING = TEXT_EMBEDDING_005
         MULTILINGUAL_EMBEDDING = TEXT_MULTILINGUAL_EMBEDDING_002
       end
 
