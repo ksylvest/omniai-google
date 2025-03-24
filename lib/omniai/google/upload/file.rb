@@ -29,7 +29,7 @@ module OmniAI
         # @return [File]
         def self.parse(client:, data:)
           new(
-            client: client,
+            client:,
             name: data["name"],
             uri: data["uri"],
             state: data["state"],

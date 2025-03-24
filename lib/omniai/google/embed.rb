@@ -41,7 +41,7 @@ module OmniAI
         arrayify(@input).map do |text|
           {
             model: "models/#{@model}",
-            content: { parts: [{ text: text }] },
+            content: { parts: [{ text: }] },
           }
         end
       end
