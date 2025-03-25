@@ -12,7 +12,7 @@ RSpec.describe OmniAI::Google::Embed do
     let(:location) { OmniAI::Google::Config::DEFAULT_LOCATION }
 
     before do
-      stub_request(:post, "https://generativelanguage.googleapis.com//v1beta/models/text-embedding-004:batchEmbedContents?key=...")
+      stub_request(:post, "https://generativelanguage.googleapis.com//v1beta/models/text-embedding-005:batchEmbedContents?key=...")
         .with(body: {
           requests: [
             {
