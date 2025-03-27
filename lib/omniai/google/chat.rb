@@ -74,7 +74,7 @@ module OmniAI
           .accept(:json)
           .post(path, params: {
             key: @client.api_key,
-            alt: ("sse" if @stream),
+            alt: ("sse" if stream?),
           }.compact, json: payload)
       end
 
@@ -122,7 +122,7 @@ module OmniAI
 
       # @return [String]
       def operation
-        @stream ? "streamGenerateContent" : "generateContent"
+        stream? ? "streamGenerateContent" : "generateContent"
       end
 
       # @return [Array<Message>]
