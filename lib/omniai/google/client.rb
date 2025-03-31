@@ -24,22 +24,27 @@ module OmniAI
       #   @return [String, nil]
       attr_accessor :version
 
-      # @param api_key [String] optional - defaults to `OmniAI::Google.config.api_key`
-      # @param host [String] optional - defaults to `OmniAI::Google.config.host`
-      # @param version [String] optional - defaults to `OmniAI::Google.config.version`
-      # @param logger [Logger] optional - defaults to `OmniAI::Google.config.logger`
-      # @param timeout [Integer] optional - defaults to `OmniAI::Google.config.timeout`
+      # @param api_key [String] default is `OmniAI::Google.config.api_key`
+      # @param credentials [Google::Auth::ServiceAccountCredentials] default is `OmniAI::Google.config.credentials`
+      # @param host [String] default is `OmniAI::Google.config.host`
+      # @param version [String] default is `OmniAI::Google.config.version`
+      # @param logger [Logger] default is `OmniAI::Google.config.logger`
+      # @param timeout [Integer] default is `OmniAI::Google.config.timeout`
       def initialize(
         api_key: OmniAI::Google.config.api_key,
+        credentials: OmniAI::Google.config.credentials,
         logger: OmniAI::Google.config.logger,
         host: OmniAI::Google.config.host,
         version: OmniAI::Google.config.version,
         timeout: OmniAI::Google.config.timeout
       )
-        raise(ArgumentError, %(ENV['GOOGLE_API_KEY'] must be defined or `api_key` must be passed)) if api_key.nil?
+        if api_key.nil? && credentials.nil?
+          raise(ArgumentError, "either an `api_key` or `credentials` must be provided")
+        end
 
         super(api_key:, host:, logger:, timeout:)
 
+        @credentials = credentials
         @version = version
       end
 
@@ -79,11 +84,44 @@ module OmniAI
 
       # @return [String]
       def path
-        if @project_id
-          "/#{@version}/projects/#{@project_id}/locations/#{@location}/publishers/google"
+        if project && location
+          "/#{@version}/projects/#{project}/locations/#{location}/publishers/google"
         else
           "/#{@version}"
         end
+      end
+
+      # @return [HTTP::Client]
+      def connection
+        http = super
+        http = http.auth(auth) if auth?
+        http
+      end
+
+    private
+
+      # @return [String, nil]
+      def location
+        @location ||= begin
+          match = @host.match(%r{//(?<location>[\w\-]+)-aiplatform\.googleapis\.com})
+          match[:location] if match
+        end
+      end
+
+      # @return [String, nil]
+      def project
+        @credentials&.project_id
+      end
+
+      # @return [Boolean]
+      def auth?
+        !@credentials.nil?
+      end
+
+      # @return [String] e.g. "Bearer ..."
+      def auth
+        @credentials.fetch_access_token!
+        "Bearer #{@credentials.access_token}"
       end
     end
   end

@@ -12,6 +12,9 @@ RSpec/SpecFilePathFormat:
   CustomTransform:
     OmniAI: omniai
 
+RSpec/MultipleExpectations:
+  Enabled: false
+
 RSpec/MultipleMemoizedHelpers:
   Enabled: false
 
