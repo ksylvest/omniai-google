@@ -27,20 +27,65 @@ client = OmniAI::Google::Client.new
 A client may also be passed the following options:
 
 - `api_key` (required - default is `ENV['GOOGLE_API_KEY']`)
+- `credentials` (optional)
 - `host` (optional)
 - `version` (optional - options are `v1` or `v1beta`)
 
 ### Configuration
 
-Global configuration is supported for the following options:
+Vertex AI and Google AI offer different options for interacting w/ Google's AI APIs. Checkout the [Vertex AI and Google AI differences](https://cloud.google.com/vertex-ai/generative-ai/docs/overview#how-gemini-vertex-different-gemini-aistudio) to determine which option best fits your requirements.
+
+#### Authentication
+
+**w/ `api_key`**
+
+The quickest way to authenticate (available if using Google AI) is by using an API key:
 
 ```ruby
 OmniAI::Google.configure do |config|
   config.api_key = 'sk-...' # default: ENV['GOOGLE_API_KEY']
-  config.host = '...' # default: 'https://generativelanguage.googleapis.com'
-  config.version = OmniAI::Google::Config::Version::BETA # either 'v1' or 'v1beta'
 end
 ```
+
+**w/ `credentials`**
+
+An alternative approach for authentication (required if using Vertex AI) is to use credentials directly:
+
+```ruby
+require 'googleauth'
+
+credentials = Google::Auth::ServiceAccountCredentials.make_creds(
+  json_key_io: File.open('credentials.json'),
+  scope: 'https://www.googleapis.com/auth/cloud-platform'
+)
+
+OmniAI::Google.configure do |config|
+  config.credentials = credentials
+end
+```
+
+#### Host
+
+The host (defaults to `https://generativelanguage.googleapis.com`) may be changed (required if using Vertex AI) using:
+
+```ruby
+OmniAI::Google.configure do |config|
+  config.host = 'https://us-east4-aiplatform.googleapis.com' # see https://cloud.google.com/vertex-ai/docs/general/locations
+end
+```
+
+#### Version
+
+The version (defaults to `v1beta`) may be changed using:
+
+```ruby
+OmniAI::Google.configure do |config|
+  # ...
+  config.version = OmniAI::Google::Config::Version::STABLE # see https://ai.google.dev/gemini-api/docs/api-versions
+end
+```
+
+_The default API version is configured to **v1beta** instead of **v1** due to various missing features in **v1**._
 
 ### Chat
 

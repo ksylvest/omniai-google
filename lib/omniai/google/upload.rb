@@ -27,7 +27,9 @@ module OmniAI
           response = @client
             .connection
             .headers({ "X-Goog-Upload-Protocol" => "raw" })
-            .post("/upload/#{@client.version}/files?key=#{@client.api_key}", body: HTTP::FormData::File.new(io))
+            .post("/upload/#{@client.version}/files",
+              params: { key: @client.api_key }.compact,
+              body: HTTP::FormData::File.new(io))
         end
 
         raise OmniAI::HTTPError, response.flush unless response.status.ok?

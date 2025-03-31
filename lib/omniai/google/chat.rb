@@ -117,7 +117,7 @@ module OmniAI
 
       # @return [String]
       def path
-        "/#{@client.version}/models/#{@model}:#{operation}"
+        "#{@client.path}/models/#{@model}:#{operation}"
       end
 
       # @return [String]
