@@ -73,7 +73,7 @@ module OmniAI
           .connection
           .accept(:json)
           .post(path, params: {
-            key: @client.api_key,
+            key: (@client.api_key unless @client.credentials?),
             alt: ("sse" if stream?),
           }.compact, json: payload)
       end
