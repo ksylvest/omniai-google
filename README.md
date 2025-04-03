@@ -35,11 +35,11 @@ A client may also be passed the following options:
 
 Vertex AI and Google AI offer different options for interacting w/ Google's AI APIs. Checkout the [Vertex AI and Google AI differences](https://cloud.google.com/vertex-ai/generative-ai/docs/overview#how-gemini-vertex-different-gemini-aistudio) to determine which option best fits your requirements.
 
-#### Authentication
+#### Configuration w/ Gemini
 
 **w/ `api_key`**
 
-The quickest way to authenticate (available if using Google AI) is by using an API key:
+If using Gemini simply provide an `api_key`:
 
 ```ruby
 OmniAI::Google.configure do |config|
@@ -47,7 +47,7 @@ OmniAI::Google.configure do |config|
 end
 ```
 
-**w/ `credentials`**
+#### Configuration w/ Vertex
 
 If using Vertex supply the `credentials`, `host`, `location_id` and `project_id`:
 
