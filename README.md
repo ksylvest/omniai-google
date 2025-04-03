@@ -74,17 +74,6 @@ OmniAI::Google.configure do |config|
 end
 ```
 
-#### Version
-
-The version (defaults to `v1beta`) may be changed using:
-
-```ruby
-OmniAI::Google.configure do |config|
-  # ...
-  config.version = OmniAI::Google::Config::Version::STABLE # see https://ai.google.dev/gemini-api/docs/api-versions
-end
-```
-
 _The default API version is configured to **v1beta** instead of **v1** due to various missing features in **v1**._
 
 ### Chat
