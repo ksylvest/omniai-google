@@ -39,9 +39,7 @@ RSpec.describe OmniAI::Google::Client do
     end
 
     context "with options" do
-      let(:options) { { credentials:, host: } }
-      let(:credentials) { instance_double(Google::Auth::ServiceAccountCredentials, project_id: "manhattan") }
-      let(:host) { "https://us-east4-aiplatform.googleapis.com" }
+      let(:options) { { project_id: "manhattan", location_id: "us-east4" } }
 
       it "returns the path" do
         expect(client.path).to eq("/#{client.version}/projects/manhattan/locations/us-east4/publishers/google")

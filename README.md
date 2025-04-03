@@ -43,38 +43,28 @@ The quickest way to authenticate (available if using Google AI) is by using an A
 
 ```ruby
 OmniAI::Google.configure do |config|
-  config.api_key = 'sk-...' # default: ENV['GOOGLE_API_KEY']
+  config.api_key = 'sk-...' # defaults is `ENV['GOOGLE_API_KEY']`
 end
 ```
 
 **w/ `credentials`**
 
-An alternative approach for authentication (required if using Vertex AI) is to use credentials directly:
-
-```ruby
-require 'googleauth'
-
-credentials = Google::Auth::ServiceAccountCredentials.make_creds(
-  json_key_io: File.open('credentials.json'),
-  scope: 'https://www.googleapis.com/auth/cloud-platform'
-)
-
-OmniAI::Google.configure do |config|
-  config.credentials = credentials
-end
-```
-
-#### Host
-
-The host (defaults to `https://generativelanguage.googleapis.com`) may be changed (required if using Vertex AI) using:
+If using Vertex supply the `credentials`, `host`, `location_id` and `project_id`:
 
 ```ruby
 OmniAI::Google.configure do |config|
-  config.host = 'https://us-east4-aiplatform.googleapis.com' # see https://cloud.google.com/vertex-ai/docs/general/locations
+  config.credentials = File.open("./credentials.json") # default is `ENV['GOOGLE_CREDENTIALS_PATH']` / `ENV['GOOGLE_CREDENTIALS_JSON']`
+  config.host = 'https://us-east4-aiplatform.googleapis.com' # default is `ENV['GOOGLE_HOST']`
+  config.location_id = 'us-east4' # defaults is `ENV['GOOGLE_LOCATION_ID']`
+  config.project_id = '...' # defaults is `ENV['GOOGLE_PROJECT_ID']`
 end
 ```
 
-_The default API version is configured to **v1beta** instead of **v1** due to various missing features in **v1**._
+Credentials may be configured using:
+
+1. A `File` / `String` / `Pathname`.
+2. Assigning `ENV['GOOGLE_CREDENTIALS_PATH']` as the path to the `credentials.json`.
+3. Assigning `ENV['GOOGLE_CREDENTIALS_JSON']` to the contents of `credentials.json`.
 
 ### Chat
 
