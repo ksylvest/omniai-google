@@ -25,6 +25,8 @@ module OmniAI
       attr_accessor :version
 
       # @param api_key [String] default is `OmniAI::Google.config.api_key`
+      # @param project_id [String] default is `OmniAI::Google.config.project_id`
+      # @param location_id [String] default is `OmniAI::Google.config.location_id`
       # @param credentials [Google::Auth::ServiceAccountCredentials] default is `OmniAI::Google.config.credentials`
       # @param host [String] default is `OmniAI::Google.config.host`
       # @param version [String] default is `OmniAI::Google.config.version`
@@ -32,6 +34,8 @@ module OmniAI
       # @param timeout [Integer] default is `OmniAI::Google.config.timeout`
       def initialize(
         api_key: OmniAI::Google.config.api_key,
+        project_id: OmniAI::Google.config.project_id,
+        location_id: OmniAI::Google.config.location_id,
         credentials: OmniAI::Google.config.credentials,
         logger: OmniAI::Google.config.logger,
         host: OmniAI::Google.config.host,
@@ -44,6 +48,8 @@ module OmniAI
 
         super(api_key:, host:, logger:, timeout:)
 
+        @project_id = project_id
+        @location_id = location_id
         @credentials = credentials
         @version = version
       end
@@ -84,8 +90,8 @@ module OmniAI
 
       # @return [String]
       def path
-        if project && location
-          "/#{@version}/projects/#{project}/locations/#{location}/publishers/google"
+        if @project_id && @location_id
+          "/#{@version}/projects/#{@project_id}/locations/#{@location_id}/publishers/google"
         else
           "/#{@version}"
         end
@@ -94,29 +100,16 @@ module OmniAI
       # @return [HTTP::Client]
       def connection
         http = super
-        http = http.auth(auth) if auth?
+        http = http.auth(auth) if credentials?
         http
       end
 
-    private
-
-      # @return [String, nil]
-      def location
-        @location ||= begin
-          match = @host.match(%r{//(?<location>[\w\-]+)-aiplatform\.googleapis\.com})
-          match[:location] if match
-        end
-      end
-
-      # @return [String, nil]
-      def project
-        @credentials&.project_id
-      end
-
       # @return [Boolean]
-      def auth?
+      def credentials?
         !@credentials.nil?
       end
+
+    private
 
       # @return [String] e.g. "Bearer ..."
       def auth
