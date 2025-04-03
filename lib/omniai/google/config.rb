@@ -12,7 +12,7 @@ module OmniAI
       DEFAULT_HOST = "https://generativelanguage.googleapis.com"
 
       # @!attribute [rw] credentials
-      #   @return [String, nil]
+      #   @return [Google::Auth::ServiceAccountCredentials, nil]
       attr_accessor :credentials
 
       # @param api_key [String, nil] optional - defaults to `ENV['GOOGLE_API_KEY']`
