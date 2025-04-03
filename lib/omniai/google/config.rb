@@ -10,11 +10,6 @@ module OmniAI
       end
 
       DEFAULT_HOST = "https://generativelanguage.googleapis.com"
-      DEFAULT_VERSION = Version::BETA
-
-      # @!attribute [rw] version
-      #   @return [String, nil]
-      attr_accessor :version
 
       # @!attribute [rw] credentials
       #   @return [String, nil]
@@ -36,7 +31,11 @@ module OmniAI
       )
         super(api_key:, host:, logger:, timeout:)
         @credentials = credentials
-        @version = version
+
+      # @return [String]
+      def version
+        @host.eql?(DEFAULT_HOST) ? Version::BETA : Version::STABLE
+      end
       end
     end
   end
