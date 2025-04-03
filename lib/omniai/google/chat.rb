@@ -99,7 +99,7 @@ module OmniAI
 
       # @return [Hash]
       def generation_config
-        response_mime_type = (JSON_MIME_TYPE if json_mime_type?)
+        response_mime_type = (JSON_MIME_TYPE if @format.eql?(:json))
 
         return unless @temperature || response_mime_type
 
@@ -107,12 +107,6 @@ module OmniAI
           temperature: @temperature,
           responseMimeType: response_mime_type,
         }.compact
-      end
-
-      # Checks if setting a jsonMimeType is supported
-      # @return [Boolean]
-      def json_mime_type?
-        @client.version == OmniAI::Google::Config::Version::BETA && @format.eql?(:json)
       end
 
       # @return [String]
