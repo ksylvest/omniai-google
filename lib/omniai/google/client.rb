@@ -109,6 +109,11 @@ module OmniAI
         !@credentials.nil?
       end
 
+      # @return [Boolean]
+      def vertex?
+        @host.include?("aiplatform.googleapis.com")
+      end
+
     private
 
       # @return [String] e.g. "Bearer ..."

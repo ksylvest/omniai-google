@@ -19,24 +19,48 @@ module OmniAI
 
       DEFAULT_MODEL = Model::EMBEDDING
 
-      EMBEDDINGS_DESERIALIZER = proc do |data, *|
+      DEFAULT_EMBEDDINGS_DESERIALIZER = proc do |data, *|
         data["embeddings"].map { |embedding| embedding["values"] }
       end
 
+      VERTEX_EMBEDDINGS_DESERIALIZER = proc do |data, *|
+        data["predictions"].map { |prediction| prediction["embeddings"]["values"] }
+      end
+
       # @return [Context]
-      CONTEXT = Context.build do |context|
-        context.deserializers[:embeddings] = EMBEDDINGS_DESERIALIZER
+      DEFAULT_CONTEXT = Context.build do |context|
+        context.deserializers[:embeddings] = DEFAULT_EMBEDDINGS_DESERIALIZER
+      end
+
+      # @return [Context]
+      VERTEX_CONTEXT = Context.build do |context|
+        context.deserializers[:embeddings] = VERTEX_EMBEDDINGS_DESERIALIZER
       end
 
     protected
 
+      # @return [Boolean]
+      def vertex?
+        @client.vertex?
+      end
+
+      # @return [Context]
+      def context
+        vertex? ? VERTEX_CONTEXT : DEFAULT_CONTEXT
+      end
+
       # @param response [HTTP::Response]
       # @return [Response]
       def parse!(response:)
-        Response.new(data: response.parse, context: CONTEXT)
+        Response.new(data: response.parse, context:)
       end
 
-      # @return [Array<Hash<{ text: String }>]
+      # @return [Array[Hash]]
+      def instances
+        arrayify(@input).map { |content| { content: } }
+      end
+
+      # @return [Array[Hash]]
       def requests
         arrayify(@input).map do |text|
           {
@@ -48,14 +72,26 @@ module OmniAI
 
       # @return [Hash]
       def payload
-        { requests: }
+        vertex? ? { instances: } : { requests: }
+      end
+
+      # @return [Hash]
+      def params
+        { key: (@client.api_key unless @client.credentials?) }.compact
       end
 
       # @return [String]
       def path
-        "/#{@client.path}/models/#{@model}:batchEmbedContents?key=#{@client.api_key}"
+        "/#{@client.path}/models/#{@model}:#{procedure}"
       end
 
+      # @return [String]
+      def procedure
+        vertex? ? "predict" : "batchEmbedContents"
+      end
+
+      # @param input [Object]
+      # @return [Array]
       def arrayify(input)
         input.is_a?(Array) ? input : [input]
       end
