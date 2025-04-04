@@ -28,6 +28,12 @@ module OmniAI
         data["predictions"].map { |prediction| prediction["embeddings"]["values"] }
       end
 
+      VERTEX_USAGE_DESERIALIZER = proc do |data, *|
+        tokens = data["predictions"].map { |prediction| prediction["embeddings"]["statistics"]["token_count"] }.sum
+
+        Usage.new(prompt_tokens: tokens, total_tokens: tokens)
+      end
+
       # @return [Context]
       DEFAULT_CONTEXT = Context.build do |context|
         context.deserializers[:embeddings] = DEFAULT_EMBEDDINGS_DESERIALIZER
@@ -36,6 +42,7 @@ module OmniAI
       # @return [Context]
       VERTEX_CONTEXT = Context.build do |context|
         context.deserializers[:embeddings] = VERTEX_EMBEDDINGS_DESERIALIZER
+        context.deserializers[:usage] = VERTEX_USAGE_DESERIALIZER
       end
 
     protected
@@ -48,12 +55,6 @@ module OmniAI
       # @return [Context]
       def context
         vertex? ? VERTEX_CONTEXT : DEFAULT_CONTEXT
-      end
-
-      # @param response [HTTP::Response]
-      # @return [Response]
-      def parse!(response:)
-        Response.new(data: response.parse, context:)
       end
 
       # @return [Array[Hash]]
