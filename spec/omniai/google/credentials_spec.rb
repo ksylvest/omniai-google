@@ -5,7 +5,7 @@ RSpec.describe OmniAI::Google::Credentials do
     subject(:parse) { described_class.parse(value) }
 
     let(:config) do
-      JSON.generate({
+      {
         type: "service_account",
         project_id: "fake",
         private_key_id: "fake",
@@ -17,12 +17,12 @@ RSpec.describe OmniAI::Google::Credentials do
         auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
         client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/fake.iam.gserviceaccount.com",
         universe_domain: "googleapis.com",
-      })
+      }
     end
 
     let(:file) do
       tempfile = Tempfile.new(%w[credentials json])
-      tempfile.write(config)
+      tempfile.write(JSON.generate(config))
       tempfile.flush
       tempfile
     end
@@ -50,8 +50,16 @@ RSpec.describe OmniAI::Google::Credentials do
       end
     end
 
-    context "when value is a string" do
+    context "when value is a hash" do
       let(:value) { config }
+
+      it "parses to a 'Google::Auth::ServiceAccountCredentials'" do
+        expect(parse).to be_a(Google::Auth::ServiceAccountCredentials)
+      end
+    end
+
+    context "when value is a string" do
+      let(:value) { JSON.generate(config) }
 
       it "parses to a 'Google::Auth::ServiceAccountCredentials'" do
         expect(parse).to be_a(Google::Auth::ServiceAccountCredentials)

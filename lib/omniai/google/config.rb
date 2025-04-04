@@ -51,7 +51,7 @@ module OmniAI
         Credentials.detect
       end
 
-      # @param value [String, File, Google::Auth::ServiceAccountCredentials, nil]
+      # @param value [String, File, Hash, Google::Auth::ServiceAccountCredentials, nil]
       def credentials=(value)
         @credentials = Credentials.parse(value)
       end
