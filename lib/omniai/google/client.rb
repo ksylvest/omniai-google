@@ -50,7 +50,7 @@ module OmniAI
 
         @project_id = project_id
         @location_id = location_id
-        @credentials = credentials
+        @credentials = Credentials.parse(credentials)
         @version = version
       end
 

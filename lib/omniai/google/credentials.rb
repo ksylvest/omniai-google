@@ -17,14 +17,15 @@ module OmniAI
         end
       end
 
-      # @param value [Google::Auth::ServiceAccountCredentials, IO, Pathname, String nil]
+      # @param value [Google::Auth::ServiceAccountCredentials, IO, Pathname, String, Hash, nil]
       # @return [Google::Auth::ServiceAccountCredentials]
       def self.parse(value)
         case value
-        when ::Google::Auth::ServiceAccountCredentials then value
         when IO, StringIO then ::Google::Auth::ServiceAccountCredentials.make_creds(json_key_io: value, scope: SCOPE)
+        when Hash then parse(JSON.generate(value))
         when Pathname then parse(File.open(value))
         when String then parse(StringIO.new(value))
+        else value
         end
       end
     end
