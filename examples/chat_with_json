@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "omniai/google"
+
+client = OmniAI::Google::Client.new
+
+response = client.chat("Generate some random JSON", format: :json)
+puts response.text
