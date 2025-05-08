@@ -1,10 +1,10 @@
 PATH
   remote: .
   specs:
-    omniai-google (2.3.4)
+    omniai-google (2.6.0)
       event_stream_parser
       googleauth
-      omniai (~> 2.3)
+      omniai (~> 2.6)
       zeitwerk
 
 GEM
@@ -82,7 +82,7 @@ GEM
     multi_json (1.15.0)
     net-http (0.6.0)
       uri
-    omniai (2.5.0)
+    omniai (2.6.0)
       event_stream_parser
       http
       logger
