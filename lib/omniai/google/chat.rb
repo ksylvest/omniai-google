@@ -23,9 +23,13 @@ module OmniAI
         GEMINI_FLASH = GEMINI_2_5_FLASH
       end
 
-      DEFAULT_MODEL = Model::GEMINI_PRO
+      DEFAULT_MODEL = Model::GEMINI_2_5_FLASH
 
-      JSON_MIME_TYPE = "application/json"
+      module ResponseMimeType
+        JSON = "application/json"
+        TEXT = "text/plain"
+        SCHEMA = JSON
+      end
 
       # @return [Context]
       CONTEXT = Context.build do |context|
@@ -100,14 +104,22 @@ module OmniAI
 
       # @return [Hash]
       def generation_config
-        response_mime_type = (JSON_MIME_TYPE if @format.eql?(:json))
+        data =
+          case @format
+          when :json then { responseMimeType: ResponseMimeType::JSON }
+          when :text then { responseMimeType: ResponseMimeType::TEXT }
+          when OmniAI::Schema::Format
+            {
+              responseMimeType: ResponseMimeType::SCHEMA,
+              responseSchema: @format.schema.serialize,
+            }
+          else {}
+          end
 
-        return unless @temperature || response_mime_type
+        data[:temperature] = @temperature if @temperature
 
-        {
-          temperature: @temperature,
-          responseMimeType: response_mime_type,
-        }.compact
+        data = data.compact
+        data unless data.empty?
       end
 
       # @return [String]

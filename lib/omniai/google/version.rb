@@ -2,6 +2,6 @@
 
 module OmniAI
   module Google
-    VERSION = "2.3.4"
+    VERSION = "2.6.0"
   end
 end
