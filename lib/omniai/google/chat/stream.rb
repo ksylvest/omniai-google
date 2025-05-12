@@ -45,12 +45,24 @@ module OmniAI
           end
 
           data["candidates"].each_with_index do |candidate, index|
-            candidate["content"]["parts"].each do |part|
-              block&.call(OmniAI::Chat::Delta.new(text: part["text"])) if part["text"]
-            end
-
-            merge_candidate!(candidate:, index:, &block)
+            process_candidate!(candidate:, index:, &block)
           end
+        end
+
+        # @yield [delta]
+        # @yieldparam delta [OmniAI::Chat::Delta]
+        #
+        # @param candidate [Hash]
+        # @param index [Integer]
+        def process_candidate!(candidate:, index:, &block)
+          parts = candidate["content"]["parts"]
+          return unless parts
+
+          candidate["content"]["parts"].each do |part|
+            block&.call(OmniAI::Chat::Delta.new(text: part["text"])) if part["text"]
+          end
+
+          merge_candidate!(candidate:, index:)
         end
 
         # @param candidate [Hash]
