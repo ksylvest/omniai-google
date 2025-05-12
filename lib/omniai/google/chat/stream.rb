@@ -58,7 +58,7 @@ module OmniAI
           parts = candidate["content"]["parts"]
           return unless parts
 
-          candidate["content"]["parts"].each do |part|
+          parts.each do |part|
             block&.call(OmniAI::Chat::Delta.new(text: part["text"])) if part["text"]
           end
 
