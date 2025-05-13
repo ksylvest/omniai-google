@@ -16,10 +16,9 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               {
                 content: {
                   role: "model",
-                  parts: [{
-                    text: "Hello",
-                  }],
+                  parts: [{ text: "Hello" }],
                 },
+                index: 0,
               },
             ],
           },
@@ -30,6 +29,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                   role: "model",
                   parts: [{ text: " " }],
                 },
+                index: 0,
               },
             ],
           },
@@ -40,6 +40,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                   role: "model",
                   parts: [{ text: "World" }],
                 },
+                index: 0,
               },
             ],
           },
@@ -58,6 +59,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                   },
                 ],
               },
+              "index" => 0,
             },
           ],
         })
@@ -65,7 +67,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
 
       it "yields multiple times" do
         stream!
-        expect(deltas.filter(&:text?).map(&:text)).to eql([
+        expect(deltas.map(&:text)).to eql([
           "Hello",
           " ",
           "World",
@@ -85,14 +87,39 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                     {
                       functionCall: { name: "weather", arguments: JSON.generate(location: "Madrid") },
                     },
+                  ],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [
                     {
                       functionCall: { name: "weather", arguments: JSON.generate(location: "London") },
                     },
+                  ],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [
                     {
                       functionCall: { name: "weather", arguments: JSON.generate(location: "Berlin") },
                     },
                   ],
                 },
+                index: 0,
               },
             ],
           },
@@ -126,6 +153,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                   },
                 ],
               },
+              "index" => 0,
             },
           ],
         })
@@ -134,6 +162,136 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       it "does not yield" do
         stream!
         expect(deltas).to eql([])
+      end
+    end
+
+    context "when parsing text and tool call list chunks" do
+      let(:chunks) do
+        [
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "Hello" }],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: " " }],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "World" }],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [
+                    {
+                      functionCall: { name: "weather", arguments: JSON.generate(location: "Madrid") },
+                    },
+                  ],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [
+                    {
+                      functionCall: { name: "weather", arguments: JSON.generate(location: "London") },
+                    },
+                  ],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [
+                    {
+                      functionCall: { name: "weather", arguments: JSON.generate(location: "Berlin") },
+                    },
+                  ],
+                },
+                index: 0,
+              },
+            ],
+          },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "combines multiple chunks" do
+        expect(stream!).to eql({
+          "candidates" => [
+            {
+              "content" => {
+                "role" => "model",
+                "parts" => [
+                  {
+                    "text" => "Hello World",
+                  },
+                  {
+                    "functionCall" => {
+                      "name" => "weather",
+                      "arguments" => JSON.generate(location: "Madrid"),
+                    },
+                  },
+                  {
+                    "functionCall" => {
+                      "name" => "weather",
+                      "arguments" => JSON.generate(location: "London"),
+                    },
+                  },
+                  {
+                    "functionCall" => {
+                      "name" => "weather",
+                      "arguments" => JSON.generate(location: "Berlin"),
+                    },
+                  },
+                ],
+              },
+              "index" => 0,
+            },
+          ],
+        })
+      end
+
+      it "yields multiple times" do
+        stream!
+        expect(deltas.map(&:text)).to eql([
+          "Hello",
+          " ",
+          "World",
+        ])
       end
     end
   end
