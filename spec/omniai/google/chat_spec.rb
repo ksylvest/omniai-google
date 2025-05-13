@@ -106,9 +106,9 @@ RSpec.describe OmniAI::Google::Chat do
             ],
           })
           .to_return(body: <<~STREAM)
-            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'Hello' }], role: 'model' } }])}\n
-            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: ' ' }], role: 'model' } }])}\n
-            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'World' }], role: 'model' } }])}\n
+            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'Hello' }], role: 'model' }, index: 0 }])}\n
+            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: ' ' }], role: 'model' }, index: 0 }])}\n
+            data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'World' }], role: 'model' }, index: 0 }])}\n
           STREAM
       end
 

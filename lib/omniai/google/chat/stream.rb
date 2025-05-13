@@ -44,8 +44,8 @@ module OmniAI
             @data[key] = value unless key.eql?("candidates")
           end
 
-          data["candidates"].each_with_index do |candidate, index|
-            process_candidate!(candidate:, index:, &block)
+          data["candidates"].each do |candidate|
+            process_candidate!(candidate:, &block)
           end
         end
 
@@ -53,37 +53,39 @@ module OmniAI
         # @yieldparam delta [OmniAI::Chat::Delta]
         #
         # @param candidate [Hash]
-        # @param index [Integer]
-        def process_candidate!(candidate:, index:, &block)
-          parts = candidate["content"]["parts"]
-          return unless parts
-
-          parts.each do |part|
+        def process_candidate!(candidate:, &block)
+          candidate["content"]["parts"].each do |part|
             block&.call(OmniAI::Chat::Delta.new(text: part["text"])) if part["text"]
           end
 
-          merge_candidate!(candidate:, index:)
+          merge_candidate!(candidate:)
         end
 
         # @param candidate [Hash]
-        # @param index [Integer]
-        def merge_candidate!(candidate:, index:)
+        def merge_candidate!(candidate:)
+          index = candidate["index"]
+          raise candidate.inspect if index.nil?
+
           if @data["candidates"][index].nil?
             @data["candidates"][index] = candidate
           else
-            merge_parts!(content: @data["candidates"][index]["content"], parts: candidate["content"]["parts"])
+            merge_parts!(parts: candidate["content"]["parts"], candidate: @data["candidates"][index])
           end
         end
 
-        # @param content [Hash]
         # @param parts [Array<Hash>]
-        def merge_parts!(content:, parts:)
-          parts.each_with_index do |part, index|
-            if content["parts"][index].nil?
-              content["parts"][index] = part
-            else
-              content["parts"][index]["text"] += part["text"]
-            end
+        # @param candidate [Hash]
+        def merge_parts!(parts:, candidate:)
+          parts.each { |part| merge_part!(part:, candidate:) }
+        end
+
+        # @param part [Hash]
+        # @param into [Hash]
+        def merge_part!(part:, candidate:)
+          if candidate["content"]["parts"][-1]&.key?("text") && part["text"]
+            candidate["content"]["parts"][-1]["text"] += part["text"]
+          else
+            candidate["content"]["parts"] << part
           end
         end
       end
