@@ -44,8 +44,8 @@ module OmniAI
             @data[key] = value unless key.eql?("candidates")
           end
 
-          data["candidates"].each do |candidate|
-            process_candidate!(candidate:, &block)
+          data["candidates"].each_with_index do |candidate, index|
+            process_candidate!(candidate:, index:, &block)
           end
         end
 
@@ -53,19 +53,17 @@ module OmniAI
         # @yieldparam delta [OmniAI::Chat::Delta]
         #
         # @param candidate [Hash]
-        def process_candidate!(candidate:, &block)
+        def process_candidate!(candidate:, index:, &block)
           candidate["content"]["parts"].each do |part|
             block&.call(OmniAI::Chat::Delta.new(text: part["text"])) if part["text"]
           end
 
-          merge_candidate!(candidate:)
+          merge_candidate!(candidate:, index:)
         end
 
         # @param candidate [Hash]
-        def merge_candidate!(candidate:)
-          index = candidate["index"]
-          raise candidate.inspect if index.nil?
-
+        # @param index [Integer]
+        def merge_candidate!(candidate:, index:)
           if @data["candidates"][index].nil?
             @data["candidates"][index] = candidate
           else
