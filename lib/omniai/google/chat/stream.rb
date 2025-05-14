@@ -54,6 +54,8 @@ module OmniAI
         #
         # @param candidate [Hash]
         def process_candidate!(candidate:, index:, &block)
+          return unless candidate["content"]
+
           candidate["content"]["parts"].each do |part|
             block&.call(OmniAI::Chat::Delta.new(text: part["text"])) if part["text"]
           end
