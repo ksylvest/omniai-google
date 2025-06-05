@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    omniai-google (2.6.5)
+    omniai-google (2.6.6)
       event_stream_parser
       googleauth
       omniai (~> 2.6)
@@ -200,4 +200,4 @@ DEPENDENCIES
   yard
 
 BUNDLED WITH
-   2.6.5
+   2.6.9
