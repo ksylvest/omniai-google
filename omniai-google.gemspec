@@ -28,6 +28,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "event_stream_parser"
   spec.add_dependency "googleauth"
+  spec.add_dependency "google-cloud-storage"
   spec.add_dependency "omniai", "~> 2.6"
   spec.add_dependency "zeitwerk"
 end

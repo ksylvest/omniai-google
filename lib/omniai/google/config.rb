@@ -55,6 +55,14 @@ module OmniAI
       def credentials=(value)
         @credentials = Credentials.parse(value)
       end
+
+      # @return [Hash]
+      def transcribe_options
+        @transcribe_options ||= {}
+      end
+
+      # @param value [Hash]
+      attr_writer :transcribe_options
     end
   end
 end

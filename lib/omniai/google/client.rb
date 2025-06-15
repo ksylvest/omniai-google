@@ -88,6 +88,16 @@ module OmniAI
         Embed.process!(input, model:, client: self)
       end
 
+      # @raise [OmniAI::Error]
+      #
+      # @param input [String, File, IO] required - audio file path, file object, or GCS URI
+      # @param model [String] optional
+      # @param language [String, Array<String>] optional - language codes for transcription
+      # @param format [Symbol] optional - :json or :verbose_json
+      def transcribe(input, model: Transcribe::DEFAULT_MODEL, language: nil, format: nil)
+        Transcribe.process!(input, model:, language:, format:, client: self)
+      end
+
       # @return [String]
       def path
         if @project_id && @location_id
