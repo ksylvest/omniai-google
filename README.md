@@ -58,6 +58,8 @@ OmniAI::Google.configure do |config|
 end
 ```
 
+**Note for Transcription**: When using transcription features, ensure your service account has the necessary permissions for Google Cloud Speech-to-Text API and Google Cloud Storage (for automatic file uploads). See the [GCS Setup](#gcs-setup-for-transcription) section below for detailed configuration.
+
 Credentials may be configured using:
 
 1. A `File` / `String` / `Pathname`.
@@ -142,6 +144,204 @@ end
 ```
 
 [Google API Reference `stream`](https://ai.google.dev/gemini-api/docs/api-overview#stream)
+
+### Transcribe
+
+Audio files can be transcribed using Google's Speech-to-Text API. The implementation automatically handles both synchronous and asynchronous recognition based on file size and model type.
+
+#### Basic Usage
+
+```ruby
+# Transcribe a local audio file
+result = client.transcribe("path/to/audio.mp3")
+result.text # "Hello, this is the transcribed text..."
+
+# Transcribe with specific model
+result = client.transcribe("path/to/audio.mp3", model: "latest_long")
+result.text # "Hello, this is the transcribed text..."
+```
+
+#### Multi-Language Detection
+
+The transcription automatically detects multiple languages when no specific language is provided:
+
+```ruby
+# Auto-detect English and Spanish
+result = client.transcribe("bilingual_audio.mp3", model: "latest_long")
+result.text # "Hello, how are you? Hola, ¿cómo estás?"
+
+# Specify expected languages explicitly
+result = client.transcribe("audio.mp3", language: ["en-US", "es-US"], model: "latest_long")
+```
+
+#### Detailed Transcription with Timestamps
+
+Use `VERBOSE_JSON` format to get detailed timing information, confidence scores, and language detection per segment:
+
+```ruby
+result = client.transcribe("audio.mp3", 
+  model: "latest_long", 
+  format: OmniAI::Transcribe::Format::VERBOSE_JSON
+)
+
+# Access the full transcript
+result.text # "Complete transcribed text..."
+
+# Access detailed segment information
+result.segments.each do |segment|
+  puts "Segment #{segment[:segment_id]}: #{segment[:text]}"
+  puts "Language: #{segment[:language_code]}"
+  puts "Confidence: #{segment[:confidence]}"
+  puts "End time: #{segment[:end_time]}"
+  
+  # Word-level timing (if available)
+  segment[:words].each do |word|
+    puts "  #{word[:word]} (#{word[:start_time]} - #{word[:end_time]})"
+  end
+end
+
+# Total audio duration
+puts "Total duration: #{result.total_duration}"
+```
+
+#### Models
+
+The transcription supports various models optimized for different use cases:
+
+```ruby
+# For short audio (< 60 seconds)
+client.transcribe("short_audio.mp3", model: OmniAI::Google::Transcribe::Model::LATEST_SHORT)
+
+# For long-form audio (> 60 seconds) - automatically uses async processing
+client.transcribe("long_audio.mp3", model: OmniAI::Google::Transcribe::Model::LATEST_LONG)
+
+# For phone/telephony audio
+client.transcribe("phone_call.mp3", model: OmniAI::Google::Transcribe::Model::TELEPHONY_LONG)
+
+# For medical conversations
+client.transcribe("medical_interview.mp3", model: OmniAI::Google::Transcribe::Model::MEDICAL_CONVERSATION)
+
+# Other available models
+client.transcribe("audio.mp3", model: OmniAI::Google::Transcribe::Model::CHIRP_2) # Enhanced model
+client.transcribe("audio.mp3", model: OmniAI::Google::Transcribe::Model::CHIRP)   # Universal model
+```
+
+**Available Model Constants:**
+- `OmniAI::Google::Transcribe::Model::LATEST_SHORT` - Optimized for audio < 60 seconds
+- `OmniAI::Google::Transcribe::Model::LATEST_LONG` - Optimized for long-form audio
+- `OmniAI::Google::Transcribe::Model::TELEPHONY_SHORT` - For short phone calls
+- `OmniAI::Google::Transcribe::Model::TELEPHONY_LONG` - For long phone calls  
+- `OmniAI::Google::Transcribe::Model::MEDICAL_CONVERSATION` - For medical conversations
+- `OmniAI::Google::Transcribe::Model::MEDICAL_DICTATION` - For medical dictation
+- `OmniAI::Google::Transcribe::Model::CHIRP_2` - Enhanced universal model
+- `OmniAI::Google::Transcribe::Model::CHIRP` - Universal model
+
+#### Supported Formats
+
+- **Input**: MP3, WAV, FLAC, and other common audio formats
+- **GCS URIs**: Direct transcription from Google Cloud Storage
+- **File uploads**: Automatic upload to GCS for files > 10MB or long-form models
+
+#### Advanced Features
+
+**Automatic Processing Selection:**
+- Files < 60 seconds: Uses synchronous recognition
+- Files > 60 seconds or long-form models: Uses asynchronous batch recognition
+- Large files: Automatically uploaded to Google Cloud Storage
+
+**GCS Integration:**
+- Automatic file upload and cleanup
+- Support for existing GCS URIs
+- Configurable bucket names
+
+**Error Handling:**
+- Automatic retry logic for temporary failures
+- Clear error messages for common issues
+- Graceful handling of network timeouts
+
+[Google Speech-to-Text API Reference](https://cloud.google.com/speech-to-text/docs)
+
+#### GCS Setup for Transcription
+
+For transcription to work properly with automatic file uploads, you need to set up Google Cloud Storage and configure the appropriate permissions.
+
+##### 1. Create a GCS Bucket
+
+You must create a bucket named `{project_id}-speech-audio` manually before using transcription features:
+
+```bash
+# Using gcloud CLI
+gsutil mb gs://your-project-id-speech-audio
+
+# Or create via Google Cloud Console
+# Navigate to Cloud Storage > Browser > Create Bucket
+```
+
+##### 2. Service Account Permissions
+
+Your service account needs the following IAM roles for transcription to work:
+
+**Required Roles:**
+- **Cloud Speech Editor** - Grants access to edit resources in Speech-to-Text
+- **Storage Bucket Viewer** - Grants permission to view buckets and their metadata, excluding IAM policies
+- **Storage Object Admin** - Grants full control over objects, including listing, creating, viewing, and deleting objects
+
+**To assign roles via gcloud CLI:**
+
+```bash
+# Replace YOUR_SERVICE_ACCOUNT_EMAIL and YOUR_PROJECT_ID with actual values
+SERVICE_ACCOUNT="your-service-account@your-project-id.iam.gserviceaccount.com"
+PROJECT_ID="your-project-id"
+
+# Grant Speech-to-Text permissions
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT" \
+    --role="roles/speech.editor"
+
+# Grant Storage permissions
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT" \
+    --role="roles/storage.objectAdmin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT" \
+    --role="roles/storage.legacyBucketReader"
+```
+
+**Or via Google Cloud Console:**
+1. Go to IAM & Admin > IAM
+2. Find your service account
+3. Click "Edit Principal" 
+4. Add the required roles listed above
+
+##### 3. Enable Required APIs
+
+Ensure the following APIs are enabled in your Google Cloud Project:
+
+```bash
+# Enable Speech-to-Text API
+gcloud services enable speech.googleapis.com
+
+# Enable Cloud Storage API  
+gcloud services enable storage.googleapis.com
+```
+
+##### 4. Bucket Configuration (Optional)
+
+You can customize the bucket name by configuring it in your application:
+
+```ruby
+# Custom bucket name in your transcription calls
+# The bucket must exist and your service account must have access
+client.transcribe("audio.mp3", bucket_name: "my-custom-audio-bucket")
+```
+
+**Important Notes:**
+- The default bucket name follows the pattern: `{project_id}-speech-audio`
+- You must create the bucket manually before using transcription features
+- Choose an appropriate region for your bucket based on your location and compliance requirements
+- Audio files are automatically deleted after successful transcription
+- If transcription fails, temporary files may remain and should be cleaned up manually
 
 ### Embed
 
