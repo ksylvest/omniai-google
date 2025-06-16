@@ -56,12 +56,12 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
     end
   end
 
-  describe "#speech_endpoint" do
+  describe "#endpoint" do
     context "with global location" do
       let(:client) { OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "global") }
 
       it "returns global speech endpoint" do
-        endpoint = transcribe.send(:speech_endpoint)
+        endpoint = transcribe.send(:endpoint)
         expect(endpoint).to eq "https://speech.googleapis.com"
       end
     end
@@ -72,7 +72,7 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
       end
 
       it "returns regional speech endpoint" do
-        endpoint = transcribe.send(:speech_endpoint)
+        endpoint = transcribe.send(:endpoint)
         expect(endpoint).to eq "https://us-central1-speech.googleapis.com"
       end
     end

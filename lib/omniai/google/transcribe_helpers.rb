@@ -23,7 +23,7 @@ module OmniAI
       end
 
       # @return [String]
-      def speech_endpoint
+      def endpoint
         location_id == "global" ? "https://speech.googleapis.com" : "https://#{location_id}-speech.googleapis.com"
       end
 
@@ -184,7 +184,6 @@ module OmniAI
       #
       # @return [Hash]
       def poll_operation!(operation_name)
-        endpoint = speech_endpoint
         connection = HTTP.persistent(endpoint)
           .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
           .accept(:json)
@@ -222,7 +221,6 @@ module OmniAI
 
       # @return [HTTP::Response]
       def request_batch!
-        endpoint = speech_endpoint
         connection = HTTP.persistent(endpoint)
           .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
           .accept(:json)
