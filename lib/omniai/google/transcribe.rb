@@ -138,9 +138,7 @@ module OmniAI
 
       # @return [String]
       def path
-        # Always use Speech-to-Text API v2 with recognizers
-        recognizer_path = "projects/#{project_id}/locations/#{location_id}/recognizers/#{recognizer_name}"
-        "/v2/#{recognizer_path}:recognize"
+        "/v2/projects/#{project_id}/locations/#{location_id}/recognizers/_:recognize"
       end
 
       # @return [Hash]

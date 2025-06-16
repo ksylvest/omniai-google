@@ -198,20 +198,12 @@ module OmniAI
 
       # @return [String]
       def batch_path
-        # Use batchRecognize endpoint for async recognition
-        recognizer_path = "projects/#{project_id}/locations/#{location_id}/recognizers/#{recognizer_name}"
-        "/v2/#{recognizer_path}:batchRecognize"
+        "/v2/projects/#{project_id}/locations/#{location_id}/recognizers/_:batchRecognize"
       end
 
       # @return [Hash]
       def operation_params
         { key: (@client.api_key unless @client.credentials?) }.compact
-      end
-
-      # @return [String]
-      def recognizer_name
-        # Always use the default recognizer - the model is specified in the config
-        "_"
       end
 
       # @param result [Hash] Operation result from batch recognition

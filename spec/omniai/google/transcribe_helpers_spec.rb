@@ -406,12 +406,6 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
     end
   end
 
-  describe "#recognizer_name" do
-    it "returns default recognizer name" do
-      expect(transcribe.send(:recognizer_name)).to eq "_"
-    end
-  end
-
   describe "#build_config" do
     subject(:transcribe) do
       transcribe_class.new("test.mp3", client:, model: "latest_short", language: nil, format: "json")
