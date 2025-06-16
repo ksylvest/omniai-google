@@ -24,11 +24,6 @@ module OmniAI
       DEFAULT_MODEL = Model::LATEST_SHORT
       DEFAULT_RECOGNIZER = "_"
 
-      # @return [Context]
-      CONTEXT = Context.build do |context|
-        # No custom deserializers needed - let base class handle parsing
-      end
-
       # @raise [HTTPError]
       #
       # @return [OmniAI::Transcribe::Transcription]
@@ -100,23 +95,37 @@ module OmniAI
 
     protected
 
-      # @return [Context]
-      def context
-        CONTEXT
+      # @return [String]
+      def project_id
+        @client.project_id || raise(ArgumentError, "project_id is required for transcription")
+      end
+
+      # @return [String]
+      def location_id
+        case @model
+        when "chirp_2" then "us-central1"
+        else @client.location_id || "global"
+        end
+      end
+
+      # @return [String]
+      def endpoint
+        location_id == "global" ? "https://speech.googleapis.com" : "https://#{location_id}-speech.googleapis.com"
+      end
+
+      def connection
+        @connection ||= begin
+          connection = HTTP.persistent(endpoint)
+            .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
+            .accept(:json)
+          connection = connection.auth(@client.auth) if @client.credentials?
+          connection
+        end
       end
 
       # @return [HTTP::Response]
       def request!
-        # Speech-to-Text API uses different endpoints for regional vs global
-        endpoint = speech_endpoint
-        speech_connection = HTTP.persistent(endpoint)
-          .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
-          .accept(:json)
-
-        # Add authentication if using credentials
-        speech_connection = speech_connection.auth("Bearer #{@client.send(:auth).split.last}") if @client.credentials?
-
-        speech_connection.post(path, params:, json: payload)
+        connection.accept(:json).post(path, params:, json: payload)
       end
 
       # @return [Hash]
@@ -129,9 +138,7 @@ module OmniAI
 
       # @return [String]
       def path
-        # Always use Speech-to-Text API v2 with recognizers
-        recognizer_path = "projects/#{project_id}/locations/#{location_id}/recognizers/#{recognizer_name}"
-        "/v2/#{recognizer_path}:recognize"
+        "/v2/projects/#{project_id}/locations/#{location_id}/recognizers/_:recognize"
       end
 
       # @return [Hash]

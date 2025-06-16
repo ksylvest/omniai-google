@@ -19,65 +19,6 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
     end
   end
 
-  describe "#project_id" do
-    context "when project_id is available" do
-      it "returns the project_id" do
-        expect(transcribe.send(:project_id)).to eq "test-project"
-      end
-    end
-
-    context "when project_id is missing" do
-      let(:client) do
-        OmniAI::Google::Client.new(api_key: "fake", location_id: "us-central1")
-      end
-
-      it "raises ArgumentError" do
-        expect { transcribe.send(:project_id) }
-          .to raise_error(ArgumentError, /project_id is required/)
-      end
-    end
-  end
-
-  describe "#location_id" do
-    context "when location_id is specified" do
-      it "returns the specified location_id" do
-        expect(transcribe.send(:location_id)).to eq "us-central1"
-      end
-    end
-
-    context "when location_id is not specified" do
-      let(:client) do
-        OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project")
-      end
-
-      it "returns global as default" do
-        expect(transcribe.send(:location_id)).to eq "global"
-      end
-    end
-  end
-
-  describe "#speech_endpoint" do
-    context "with global location" do
-      let(:client) { OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "global") }
-
-      it "returns global speech endpoint" do
-        endpoint = transcribe.send(:speech_endpoint)
-        expect(endpoint).to eq "https://speech.googleapis.com"
-      end
-    end
-
-    context "with regional location" do
-      let(:client) do
-        OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "us-central1")
-      end
-
-      it "returns regional speech endpoint" do
-        endpoint = transcribe.send(:speech_endpoint)
-        expect(endpoint).to eq "https://us-central1-speech.googleapis.com"
-      end
-    end
-  end
-
   describe "#language_codes" do
     subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "latest_short", language:) }
 
@@ -462,12 +403,6 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
         params = transcribe.send(:operation_params)
         expect(params[:key]).to be_nil
       end
-    end
-  end
-
-  describe "#recognizer_name" do
-    it "returns default recognizer name" do
-      expect(transcribe.send(:recognizer_name)).to eq "_"
     end
   end
 

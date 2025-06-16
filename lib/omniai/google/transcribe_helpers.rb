@@ -6,27 +6,6 @@ module OmniAI
     module TranscribeHelpers # rubocop:disable Metrics/ModuleLength
     private
 
-      # @return [String]
-      def project_id
-        @client.instance_variable_get(:@project_id) ||
-          raise(ArgumentError, "project_id is required for transcription")
-      end
-
-      # @return [String]
-      def location_id
-        case @model
-        when "chirp_2"
-          "us-central1"
-        else
-          @client.instance_variable_get(:@location_id) || "global"
-        end
-      end
-
-      # @return [String]
-      def speech_endpoint
-        location_id == "global" ? "https://speech.googleapis.com" : "https://#{location_id}-speech.googleapis.com"
-      end
-
       # @return [Array<String>, nil]
       def language_codes
         case @language
@@ -182,14 +161,6 @@ module OmniAI
       #
       # @return [Hash]
       def poll_operation!(operation_name)
-        endpoint = speech_endpoint
-        connection = HTTP.persistent(endpoint)
-          .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
-          .accept(:json)
-
-        # Add authentication if using credentials
-        connection = connection.auth("Bearer #{@client.send(:auth).split.last}") if @client.credentials?
-
         max_attempts = 60 # Maximum 15 minutes (15 second intervals)
         attempt = 0
 
@@ -220,33 +191,17 @@ module OmniAI
 
       # @return [HTTP::Response]
       def request_batch!
-        endpoint = speech_endpoint
-        connection = HTTP.persistent(endpoint)
-          .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
-          .accept(:json)
-
-        # Add authentication if using credentials
-        connection = connection.auth("Bearer #{@client.send(:auth).split.last}") if @client.credentials?
-
         connection.post(batch_path, params: operation_params, json: batch_payload)
       end
 
       # @return [String]
       def batch_path
-        # Use batchRecognize endpoint for async recognition
-        recognizer_path = "projects/#{project_id}/locations/#{location_id}/recognizers/#{recognizer_name}"
-        "/v2/#{recognizer_path}:batchRecognize"
+        "/v2/projects/#{project_id}/locations/#{location_id}/recognizers/_:batchRecognize"
       end
 
       # @return [Hash]
       def operation_params
         { key: (@client.api_key unless @client.credentials?) }.compact
-      end
-
-      # @return [String]
-      def recognizer_name
-        # Always use the default recognizer - the model is specified in the config
-        "_"
       end
 
       # @param result [Hash] Operation result from batch recognition

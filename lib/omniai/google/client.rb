@@ -24,6 +24,14 @@ module OmniAI
       #   @return [String, nil]
       attr_accessor :version
 
+      # @!attribute [rw] project_id
+      #   @return [String, nil]
+      attr_accessor :project_id
+
+      # @!attribute [rw] location_id
+      #   @return [String, nil]
+      attr_accessor :location_id
+
       # @param api_key [String] default is `OmniAI::Google.config.api_key`
       # @param project_id [String] default is `OmniAI::Google.config.project_id`
       # @param location_id [String] default is `OmniAI::Google.config.location_id`
@@ -123,8 +131,6 @@ module OmniAI
       def vertex?
         @host.include?("aiplatform.googleapis.com")
       end
-
-    private
 
       # @return [String] e.g. "Bearer ..."
       def auth
