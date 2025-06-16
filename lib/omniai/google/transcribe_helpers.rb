@@ -8,7 +8,7 @@ module OmniAI
 
       # @return [String]
       def project_id
-        @client.instance_variable_get(:@project_id) ||
+        @client.project_id ||
           raise(ArgumentError, "project_id is required for transcription")
       end
 
@@ -18,7 +18,7 @@ module OmniAI
         when "chirp_2"
           "us-central1"
         else
-          @client.instance_variable_get(:@location_id) || "global"
+          @client.location_id || "global"
         end
       end
 
