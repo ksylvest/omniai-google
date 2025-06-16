@@ -132,8 +132,6 @@ module OmniAI
         @host.include?("aiplatform.googleapis.com")
       end
 
-    private
-
       # @return [String] e.g. "Bearer ..."
       def auth
         @credentials.fetch_access_token!

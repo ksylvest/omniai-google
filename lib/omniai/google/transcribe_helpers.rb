@@ -184,13 +184,6 @@ module OmniAI
       #
       # @return [Hash]
       def poll_operation!(operation_name)
-        connection = HTTP.persistent(endpoint)
-          .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
-          .accept(:json)
-
-        # Add authentication if using credentials
-        connection = connection.auth("Bearer #{@client.send(:auth).split.last}") if @client.credentials?
-
         max_attempts = 60 # Maximum 15 minutes (15 second intervals)
         attempt = 0
 
@@ -221,13 +214,6 @@ module OmniAI
 
       # @return [HTTP::Response]
       def request_batch!
-        connection = HTTP.persistent(endpoint)
-          .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
-          .accept(:json)
-
-        # Add authentication if using credentials
-        connection = connection.auth("Bearer #{@client.send(:auth).split.last}") if @client.credentials?
-
         connection.post(batch_path, params: operation_params, json: batch_payload)
       end
 

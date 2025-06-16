@@ -95,17 +95,24 @@ module OmniAI
 
     protected
 
+      # @return [String]
+      def endpoint
+        location_id == "global" ? "https://speech.googleapis.com" : "https://#{location_id}-speech.googleapis.com"
+      end
+
+      def connection
+        @connection ||= begin
+          connection = HTTP.persistent(endpoint)
+            .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
+            .accept(:json)
+          connection = connection.auth(@client.auth) if @client.credentials?
+          connection
+        end
+      end
+
       # @return [HTTP::Response]
       def request!
-        # Speech-to-Text API uses different endpoints for regional vs global
-        speech_connection = HTTP.persistent(endpoint)
-          .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
-          .accept(:json)
-
-        # Add authentication if using credentials
-        speech_connection = speech_connection.auth("Bearer #{@client.send(:auth).split.last}") if @client.credentials?
-
-        speech_connection.post(path, params:, json: payload)
+        connection.accept(:json).post(path, params:, json: payload)
       end
 
       # @return [Hash]
