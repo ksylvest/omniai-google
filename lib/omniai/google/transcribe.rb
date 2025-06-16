@@ -24,11 +24,6 @@ module OmniAI
       DEFAULT_MODEL = Model::LATEST_SHORT
       DEFAULT_RECOGNIZER = "_"
 
-      # @return [Context]
-      CONTEXT = Context.build do |context|
-        # No custom deserializers needed - let base class handle parsing
-      end
-
       # @raise [HTTPError]
       #
       # @return [OmniAI::Transcribe::Transcription]
@@ -99,11 +94,6 @@ module OmniAI
       end
 
     protected
-
-      # @return [Context]
-      def context
-        CONTEXT
-      end
 
       # @return [HTTP::Response]
       def request!
