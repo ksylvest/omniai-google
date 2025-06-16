@@ -14,7 +14,12 @@ module OmniAI
 
       # @return [String]
       def location_id
-        @client.instance_variable_get(:@location_id) || "global"
+        case @model
+        when "chirp_2"
+          "us-central1"
+        else
+          @client.instance_variable_get(:@location_id) || "global"
+        end
       end
 
       # @return [String]
