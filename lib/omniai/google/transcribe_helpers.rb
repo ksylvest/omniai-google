@@ -6,27 +6,6 @@ module OmniAI
     module TranscribeHelpers # rubocop:disable Metrics/ModuleLength
     private
 
-      # @return [String]
-      def project_id
-        @client.project_id ||
-          raise(ArgumentError, "project_id is required for transcription")
-      end
-
-      # @return [String]
-      def location_id
-        case @model
-        when "chirp_2"
-          "us-central1"
-        else
-          @client.location_id || "global"
-        end
-      end
-
-      # @return [String]
-      def endpoint
-        location_id == "global" ? "https://speech.googleapis.com" : "https://#{location_id}-speech.googleapis.com"
-      end
-
       # @return [Array<String>, nil]
       def language_codes
         case @language
