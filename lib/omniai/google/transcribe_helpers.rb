@@ -190,13 +190,13 @@ module OmniAI
         # Add authentication if using credentials
         connection = connection.auth("Bearer #{@client.send(:auth).split.last}") if @client.credentials?
 
-        max_attempts = 60 # Maximum 15 minutes (15 second intervals)
+        max_attempts = calculate_max_polling_attempts
         attempt = 0
 
         loop do
           attempt += 1
 
-          raise HTTPError, "Operation timed out after #{max_attempts * 15} seconds" if attempt > max_attempts
+          raise StandardError, "Operation timed out after #{max_attempts * 15} seconds" if attempt > max_attempts
 
           operation_response = connection.get("/v2/#{operation_name}", params: operation_params)
 
@@ -453,6 +453,17 @@ module OmniAI
       def create_storage_client
         credentials = @client.instance_variable_get(:@credentials)
         ::Google::Cloud::Storage.new(project_id:, credentials:)
+      end
+
+      # @return [Integer]
+      def calculate_max_polling_attempts
+        file_size_bytes = calculate_file_size
+        assumed_bitrate_bps = 48_000
+        estimated_duration_seconds = (file_size_bytes * 8.0) / assumed_bitrate_bps
+        estimated_processing_seconds = estimated_duration_seconds * 0.3
+        total_wait_seconds = estimated_processing_seconds + 90
+        final_wait_seconds = total_wait_seconds.clamp(180, 10_800)
+        (final_wait_seconds / 15).ceil
       end
     end
   end
