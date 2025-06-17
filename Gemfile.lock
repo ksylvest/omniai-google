@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    omniai-google (2.7.8)
+    omniai-google (2.7.9)
       event_stream_parser
       google-cloud-storage
       googleauth
