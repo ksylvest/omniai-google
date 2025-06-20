@@ -164,8 +164,6 @@ RSpec.describe OmniAI::Google::Chat do
       end
 
       before do
-        stub_request(:get, "https://localhost/cat.jpg").to_return(body: "cat")
-        stub_request(:get, "https://localhost/dog.jpg").to_return(body: "dog")
         stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
           .with(body: {
             contents: [
@@ -173,8 +171,8 @@ RSpec.describe OmniAI::Google::Chat do
                 role: "user",
                 parts: [
                   { text: "What are these photos of?" },
-                  { inlineData: { mimeType: "image/jpeg", data: "Y2F0" } },
-                  { inlineData: { mimeType: "image/jpeg", data: "ZG9n" } },
+                  { fileData: { mimeType: "image/jpeg", fileUri: "https://localhost/cat.jpg" } },
+                  { fileData: { mimeType: "image/jpeg", fileUri: "https://localhost/dog.jpg" } },
                   { inlineData: { mimeType: "image/jpeg", data: "" } },
                 ],
               },

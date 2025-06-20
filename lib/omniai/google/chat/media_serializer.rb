@@ -33,18 +33,11 @@ module OmniAI
         #
         # @return [Hash]
         def self.serialize(media, *)
-          if media.is_a?(OmniAI::Chat::URL) && use_file_data?(URI.parse(media.uri))
+          if media.is_a?(OmniAI::Chat::URL)
             serialize_as_file_data(media)
           else
             serialize_as_inline_data(media)
           end
-        end
-
-        # @param uri [URI]
-        #
-        # @return [Boolean]
-        def self.use_file_data?(uri)
-          uri.host.eql?("generativelanguage.googleapis.com") || uri.scheme.eql?("gs")
         end
       end
     end
