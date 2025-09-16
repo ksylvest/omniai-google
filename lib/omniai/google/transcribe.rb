@@ -10,6 +10,7 @@ module OmniAI
     #   transcribe.process!(audio_file)
     class Transcribe < OmniAI::Transcribe
       include TranscribeHelpers
+
       module Model
         CHIRP_2 = "chirp_2"
         CHIRP = "chirp"
