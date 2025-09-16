@@ -4,9 +4,9 @@
 require "bundler/setup"
 require "omniai/google"
 
-CLIENT = OmniAI::Google::Client.new
+client = OmniAI::Google::Client.new
 
-puts "> [USER] Who won the most recent NBA playoffs?"
+puts "> [USER] Who won the most recent NBA Finals?"
 
-response = CLIENT.chat("Who won the most recent NBA playoffs?")
+response = client.chat("Who won the most recent NBA Finals?", tools: %i[google_search])
 puts response.text
