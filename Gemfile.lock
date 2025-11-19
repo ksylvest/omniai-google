@@ -114,7 +114,7 @@ GEM
     multi_json (1.17.0)
     net-http (0.7.0)
       uri
-    omniai (2.9.1)
+    omniai (2.9.2)
       base64
       event_stream_parser
       http
