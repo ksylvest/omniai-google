@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# rubocop:disable RSpec/SubjectStub, RSpec/VerifiedDoubles
+# rubocop:disable RSpec/SubjectStub
 RSpec.describe OmniAI::Google::Transcribe do
   let(:client) { OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "us-central1") }
   let(:model) { described_class::Model::LATEST_SHORT }
@@ -433,4 +433,4 @@ RSpec.describe OmniAI::Google::Transcribe do
     end
   end
 end
-# rubocop:enable RSpec/SubjectStub, RSpec/VerifiedDoubles
+# rubocop:enable RSpec/SubjectStub
