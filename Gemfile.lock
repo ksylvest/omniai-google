@@ -6,6 +6,7 @@ PATH
       google-cloud-storage
       googleauth
       omniai (~> 2.6)
+      openssl
       zeitwerk
 
 GEM
@@ -26,7 +27,7 @@ GEM
       rake (>= 12.0.0, < 14.0.0)
     docile (1.4.1)
     domain_name (0.6.20240107)
-    erb (5.1.3)
+    erb (6.0.0)
     event_stream_parser (1.0.0)
     faraday (2.14.0)
       faraday-net_http (>= 2.0, < 3.5)
@@ -34,8 +35,8 @@ GEM
       logger
     faraday-follow_redirects (0.4.0)
       faraday (>= 1, < 3)
-    faraday-net_http (3.4.1)
-      net-http (>= 0.5.0)
+    faraday-net_http (3.4.2)
+      net-http (~> 0.5)
     ffi (1.17.2)
     ffi (1.17.2-aarch64-linux-gnu)
     ffi (1.17.2-aarch64-linux-musl)
@@ -58,7 +59,7 @@ GEM
       mini_mime (~> 1.1)
       representable (~> 3.0)
       retriable (~> 3.1)
-    google-apis-iamcredentials_v1 (0.25.0)
+    google-apis-iamcredentials_v1 (0.26.0)
       google-apis-core (>= 0.15.0, < 2.a)
     google-apis-storage_v1 (0.57.0)
       google-apis-core (>= 0.15.0, < 2.a)
@@ -101,7 +102,7 @@ GEM
       pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
-    json (2.15.2)
+    json (2.16.0)
     jwt (3.1.2)
       base64
     language_server-protocol (3.17.0.5)
@@ -112,14 +113,15 @@ GEM
     logger (1.7.0)
     mini_mime (1.1.5)
     multi_json (1.17.0)
-    net-http (0.7.0)
-      uri
+    net-http (0.8.0)
+      uri (>= 0.11.1)
     omniai (2.9.2)
       base64
       event_stream_parser
       http
       logger
       zeitwerk
+    openssl (3.3.2)
     os (1.1.4)
     parallel (1.27.0)
     parser (3.3.10.0)
@@ -142,7 +144,7 @@ GEM
       tsort
     redcarpet (3.6.1)
     regexp_parser (2.11.3)
-    reline (0.6.2)
+    reline (0.6.3)
       io-console (~> 0.5)
     representable (3.2.0)
       declarative (< 0.1.0)
@@ -159,7 +161,7 @@ GEM
     rspec-expectations (3.13.5)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
-    rspec-mocks (3.13.6)
+    rspec-mocks (3.13.7)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
     rspec-support (3.13.6)
@@ -176,16 +178,16 @@ GEM
       rubocop-ast (>= 1.47.1, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 2.4.0, < 4.0)
-    rubocop-ast (1.47.1)
+    rubocop-ast (1.48.0)
       parser (>= 3.3.7.2)
       prism (~> 1.4)
     rubocop-basic (1.2.0)
     rubocop-rake (0.7.1)
       lint_roller (~> 1.1)
       rubocop (>= 1.72.1)
-    rubocop-rspec (3.7.0)
+    rubocop-rspec (3.8.0)
       lint_roller (~> 1.1)
-      rubocop (~> 1.72, >= 1.72.1)
+      rubocop (~> 1.81)
     ruby-progressbar (1.13.0)
     signet (0.21.0)
       addressable (~> 2.8)
@@ -196,9 +198,9 @@ GEM
       docile (~> 1.1)
       simplecov-html (~> 0.11)
       simplecov_json_formatter (~> 0.1)
-    simplecov-html (0.13.1)
+    simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
-    stringio (3.1.7)
+    stringio (3.1.8)
     trailblazer-option (0.1.2)
     tsort (0.2.0)
     uber (0.1.0)
@@ -243,4 +245,4 @@ DEPENDENCIES
   yard
 
 BUNDLED WITH
-   2.6.9
+   2.7.2
