@@ -10,7 +10,12 @@ module OmniAI
           {
             name: tool.name,
             description: tool.description,
-            parameters: tool.parameters.is_a?(OmniAI::Schema::Object) ? tool.parameters.serialize : tool.parameters,
+            parameters:
+              if tool.parameters.is_a?(OmniAI::Schema::Object)
+                tool.parameters.serialize(additional_properties: nil)
+              else
+                tool.parameters
+              end,
           }
         end
       end
