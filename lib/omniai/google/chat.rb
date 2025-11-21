@@ -121,7 +121,7 @@ module OmniAI
           when OmniAI::Schema::Format
             {
               responseMimeType: ResponseMimeType::SCHEMA,
-              responseSchema: @format.schema.serialize,
+              responseSchema: @format.schema.serialize(additional_properties: nil),
             }
           else {}
           end
