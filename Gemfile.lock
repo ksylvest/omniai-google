@@ -12,8 +12,8 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.8.7)
-      public_suffix (>= 2.0.2, < 7.0)
+    addressable (2.8.8)
+      public_suffix (>= 2.0.2, < 8.0)
     ast (2.4.3)
     base64 (0.3.0)
     bigdecimal (3.3.1)
@@ -115,7 +115,7 @@ GEM
     multi_json (1.17.0)
     net-http (0.8.0)
       uri (>= 0.11.1)
-    omniai (3.1.0)
+    omniai (3.1.2)
       base64
       event_stream_parser
       http
@@ -134,7 +134,7 @@ GEM
     psych (5.2.6)
       date
       stringio
-    public_suffix (6.0.2)
+    public_suffix (7.0.0)
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.3.1)
