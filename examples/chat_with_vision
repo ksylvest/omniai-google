@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "omniai/google"
+
+CAT_URL = "https://images.unsplash.com/photo-1472491235688-bdc81a63246e?q=80&w=1024&h=1024&fit=crop&fm=jpg"
+DOG_URL = "https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=1024&h=1024&fit=crop&fm=jpg"
+
+begin
+  client = OmniAI::Google::Client.new
+  cat_upload = client.upload(CAT_URL)
+  dog_upload = client.upload(DOG_URL)
+
+  client.chat(stream: $stdout) do |prompt|
+    prompt.system("You are a helpful biologist with an expertise in animals that responds with the latin names.")
+    prompt.user do |message|
+      message.text "What are these photos of?"
+      message.url(cat_upload.uri, cat_upload.mime_type)
+      message.url(dog_upload.uri, dog_upload.mime_type)
+    end
+  end
+ensure
+  cat_upload&.delete!
+  dog_upload&.delete!
+end

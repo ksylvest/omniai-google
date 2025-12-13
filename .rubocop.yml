@@ -1,0 +1,34 @@
+inherit_gem:
+  rubocop-basic: rubocop.yml
+
+plugins:
+  - rubocop-rake
+  - rubocop-rspec
+
+RSpec/ExampleLength:
+  Enabled: false
+
+RSpec/SpecFilePathFormat:
+  CustomTransform:
+    OmniAI: omniai
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
+Style/EmptyCaseCondition:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false

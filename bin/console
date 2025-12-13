@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "omniai/google"
+
+require "logger"
+
+CLIENT = OmniAI::Google::Client.new(logger: Logger.new($stdout))
+
+require "irb"
+IRB.start(__FILE__)

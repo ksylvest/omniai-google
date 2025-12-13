@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "omniai/google"
+
+client = OmniAI::Google::Client.new
+
+puts "> [USER] Who won the most recent NBA Finals?"
+
+response = client.chat("Who won the most recent NBA Finals?", tools: %i[google_search])
+puts response.text
