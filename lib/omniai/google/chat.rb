@@ -19,8 +19,9 @@ module OmniAI
         GEMINI_1_5_FLASH = "gemini-1.5-flash"
         GEMINI_2_0_FLASH = "gemini-2.0-flash"
         GEMINI_2_5_FLASH = "gemini-2.5-flash"
+        GEMINI_3_FLASH = "gemini-3-flash-preview"
         GEMINI_PRO = GEMINI_1_5_PRO
-        GEMINI_FLASH = GEMINI_2_5_FLASH
+        GEMINI_FLASH = GEMINI_3_FLASH
       end
 
       DEFAULT_MODEL = Model::GEMINI_2_5_FLASH
