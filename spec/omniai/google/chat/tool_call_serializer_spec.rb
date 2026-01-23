@@ -16,6 +16,28 @@ RSpec.describe OmniAI::Google::Chat::ToolCallSerializer do
     end
 
     it { expect(deserialize).to be_a(OmniAI::Chat::ToolCall) }
+
+    context "without thoughtSignature" do
+      it "has empty options" do
+        expect(deserialize.options).to eq({})
+      end
+    end
+
+    context "with thoughtSignature" do
+      let(:data) do
+        {
+          "functionCall" => {
+            "name" => "temperature",
+            "args" => { "unit" => "celsius" },
+          },
+          "thoughtSignature" => "abc123encrypted",
+        }
+      end
+
+      it "captures thought_signature in options" do
+        expect(deserialize.options[:thought_signature]).to eq("abc123encrypted")
+      end
+    end
   end
 
   describe ".serialize" do
@@ -25,5 +47,16 @@ RSpec.describe OmniAI::Google::Chat::ToolCallSerializer do
     let(:function) { OmniAI::Google::Chat::Function.new(name: "temperature", arguments: { unit: "celsius" }) }
 
     it { expect(serialize).to eql(functionCall: { name: "temperature", args: { unit: "celsius" } }) }
+
+    context "with thought_signature option" do
+      let(:tool_call) { OmniAI::Chat::ToolCall.new(id: "temperature", function:, thought_signature: "abc123encrypted") }
+
+      it "includes thoughtSignature" do
+        expect(serialize).to eql(
+          functionCall: { name: "temperature", args: { unit: "celsius" } },
+          thoughtSignature: "abc123encrypted"
+        )
+      end
+    end
   end
 end

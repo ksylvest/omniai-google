@@ -21,6 +21,29 @@ RSpec.describe OmniAI::Google::Chat::ToolCallResultSerializer do
     end
 
     it { expect(serialize).to eql(data) }
+
+    context "with thought_signature option" do
+      let(:tool_call_result) do
+        OmniAI::Chat::ToolCallResult.new(
+          tool_call_id: "temperature",
+          content: "20",
+          thought_signature: "abc123encrypted"
+        )
+      end
+
+      it "includes thoughtSignature" do
+        expect(serialize).to eql(
+          functionResponse: {
+            name: "temperature",
+            response: {
+              name: "temperature",
+              content: "20",
+            },
+          },
+          thoughtSignature: "abc123encrypted"
+        )
+      end
+    end
   end
 
   describe ".deserialize" do

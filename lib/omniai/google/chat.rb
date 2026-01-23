@@ -147,7 +147,7 @@ module OmniAI
       # @return [Array<Message>]
       def build_tool_call_messages(tool_call_list)
         content = tool_call_list.map do |tool_call|
-          ToolCallResult.new(tool_call_id: tool_call.id, content: execute_tool_call(tool_call))
+          ToolCallResult.new(tool_call_id: tool_call.id, content: execute_tool_call(tool_call), **tool_call.options)
         end
 
         [Message.new(role: "function", content:)]

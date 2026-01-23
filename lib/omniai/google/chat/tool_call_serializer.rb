@@ -9,7 +9,9 @@ module OmniAI
         # @param context [OmniAI::Context]
         # @return [Hash]
         def self.serialize(tool_call, context:)
-          { functionCall: tool_call.function.serialize(context:) }
+          result = { functionCall: tool_call.function.serialize(context:) }
+          result[:thoughtSignature] = tool_call.options[:thought_signature] if tool_call.options[:thought_signature]
+          result
         end
 
         # @param data [Hash]
@@ -17,7 +19,8 @@ module OmniAI
         # @return [OmniAI::Chat::ToolCall]
         def self.deserialize(data, context:)
           function = OmniAI::Chat::Function.deserialize(data["functionCall"], context:)
-          OmniAI::Chat::ToolCall.new(id: function.name, function:)
+          options = { thought_signature: data["thoughtSignature"] }.compact
+          OmniAI::Chat::ToolCall.new(id: function.name, function:, **options)
         end
       end
     end
