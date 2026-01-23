@@ -8,7 +8,7 @@ module OmniAI
         # @param tool_call_response [OmniAI::Chat::ToolCallResult]
         # @return [Hash]
         def self.serialize(tool_call_response, *)
-          {
+          result = {
             functionResponse: {
               name: tool_call_response.tool_call_id,
               response: {
@@ -17,6 +17,10 @@ module OmniAI
               },
             },
           }
+
+          thought_signature = tool_call_response.options[:thought_signature]
+          result[:thoughtSignature] = thought_signature if thought_signature
+          result
         end
 
         # @param data [Hash]
