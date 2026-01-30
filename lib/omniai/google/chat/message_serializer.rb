@@ -27,6 +27,7 @@ module OmniAI
           role = data["role"]
           parts = arrayify(data["parts"]).map do |part|
             case
+            when part["thought"] then OmniAI::Chat::Thinking.deserialize(part, context:)
             when part["text"] then OmniAI::Chat::Text.deserialize(part, context:)
             when part["functionCall"] then OmniAI::Chat::ToolCall.deserialize(part, context:)
             when part["functionResponse"] then OmniAI::Chat::ToolCallResult.deserialize(part, context:)
