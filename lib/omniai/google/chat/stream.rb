@@ -57,7 +57,12 @@ module OmniAI
           return unless candidate["content"]
 
           candidate["content"]["parts"].each do |part|
-            block&.call(OmniAI::Chat::Delta.new(text: part["text"])) if part["text"]
+            if part["thought"]
+              # Google uses thought: true as a flag, content is in text
+              block&.call(OmniAI::Chat::Delta.new(thinking: part["text"]))
+            elsif part["text"]
+              block&.call(OmniAI::Chat::Delta.new(text: part["text"]))
+            end
           end
 
           merge_candidate!(candidate:, index:)
@@ -82,8 +87,12 @@ module OmniAI
         # @param part [Hash]
         # @param into [Hash]
         def merge_part!(part:, candidate:)
-          if candidate["content"]["parts"][-1]&.key?("text") && part["text"]
-            candidate["content"]["parts"][-1]["text"] += part["text"]
+          last_part = candidate["content"]["parts"][-1]
+
+          if last_part&.key?("text") && part["text"]
+            last_part["text"] += part["text"]
+          elsif last_part&.key?("thought") && part["thought"]
+            last_part["thought"] += part["thought"]
           else
             candidate["content"]["parts"] << part
           end

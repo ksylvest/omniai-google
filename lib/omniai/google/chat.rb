@@ -65,6 +65,9 @@ module OmniAI
         context.deserializers[:content] = ContentSerializer.method(:deserialize)
 
         context.serializers[:tool] = ToolSerializer.method(:serialize)
+
+        context.serializers[:thinking] = ThinkingSerializer.method(:serialize)
+        context.deserializers[:thinking] = ThinkingSerializer.method(:deserialize)
       end
 
     protected
@@ -129,6 +132,7 @@ module OmniAI
           end
 
         data[:temperature] = @temperature if @temperature
+        data[:thinkingConfig] = thinking_config if thinking_config
 
         data = data.compact
         data unless data.empty?
@@ -142,6 +146,19 @@ module OmniAI
       # @return [String]
       def operation
         stream? ? "streamGenerateContent" : "generateContent"
+      end
+
+      # Translates unified thinking option to Google's thinkingConfig format.
+      # Example: `thinking: true` becomes `{ includeThoughts: true }`
+      # @return [Hash, nil]
+      def thinking_config
+        thinking = @options[:thinking]
+        return unless thinking
+
+        case thinking
+        when true then { includeThoughts: true }
+        when Hash then { includeThoughts: true }.merge(thinking)
+        end
       end
 
       # @return [Array<Message>]

@@ -149,6 +149,58 @@ RSpec.describe OmniAI::Google::Chat do
       it { expect(completion.text).to eql('{ "name": "Ringo" }') }
     end
 
+    context "with thinking: true option" do
+      subject(:completion) { described_class.process!(prompt, client:, model:, thinking: true) }
+
+      let(:prompt) { "Tell me a joke!" }
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
+          .with(body: {
+            generationConfig: { thinkingConfig: { includeThoughts: true } },
+            contents: [
+              { role: "user", parts: [{ text: "Tell me a joke!" }] },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{
+              content: {
+                role: "assistant",
+                parts: [{ text: "Two elephants fall off a cliff. Boom! Boom!" }],
+              },
+            }],
+          })
+      end
+
+      it { expect(completion.text).to eql("Two elephants fall off a cliff. Boom! Boom!") }
+    end
+
+    context "with thinking: { thinkingBudget: 1024 } option" do
+      subject(:completion) { described_class.process!(prompt, client:, model:, thinking: { thinkingBudget: 1024 }) }
+
+      let(:prompt) { "Tell me a joke!" }
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
+          .with(body: {
+            generationConfig: { thinkingConfig: { includeThoughts: true, thinkingBudget: 1024 } },
+            contents: [
+              { role: "user", parts: [{ text: "Tell me a joke!" }] },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{
+              content: {
+                role: "assistant",
+                parts: [{ text: "Two elephants fall off a cliff. Boom! Boom!" }],
+              },
+            }],
+          })
+      end
+
+      it { expect(completion.text).to eql("Two elephants fall off a cliff. Boom! Boom!") }
+    end
+
     context "when using files / URLs" do
       let(:io) { Tempfile.new }
 

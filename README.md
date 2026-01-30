@@ -118,6 +118,36 @@ end
 client.chat('Be poetic.', stream:)
 ```
 
+#### Extended Thinking
+
+Google Gemini 2.0+ models support extended thinking, which shows the model's reasoning process.
+
+```ruby
+# Enable thinking
+response = client.chat("What is 25 * 25?", model: "gemini-2.5-pro-preview-05-06", thinking: true)
+```
+
+#### Accessing Thinking Content
+
+```ruby
+response.choices.first.message.contents.each do |content|
+  case content
+  when OmniAI::Chat::Thinking
+    puts "Thinking: #{content.thinking}"
+  when OmniAI::Chat::Text
+    puts "Response: #{content.text}"
+  end
+end
+```
+
+#### Streaming with Thinking
+
+```ruby
+client.chat("What are the prime factors of 1234567?", model: "gemini-2.5-pro-preview-05-06", thinking: true, stream: $stdout)
+```
+
+[Google API Reference `thinking`](https://ai.google.dev/gemini-api/docs/thinking)
+
 ### Upload
 
 An upload is especially useful when processing audio / image / video / text files. To use:
