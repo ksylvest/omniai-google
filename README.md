@@ -87,7 +87,7 @@ completion.text # 'The capital of Canada is Ottawa.'
 
 #### Model
 
-`model` takes an optional string (default is `gemini-1.5-pro`):
+`model` takes an optional string (default is `gemini-3-flash-preview`):
 
 ```ruby
 completion = client.chat('How fast is a cheetah?', model: OmniAI::Google::Chat::Model::GEMINI_FLASH)
@@ -120,30 +120,45 @@ client.chat('Be poetic.', stream:)
 
 #### Extended Thinking
 
-Google Gemini 2.0+ models support extended thinking, which shows the model's reasoning process.
+Gemini models support extended thinking, which shows the model's reasoning process.
 
 ```ruby
-# Enable thinking
-response = client.chat("What is 25 * 25?", model: "gemini-2.5-pro-preview-05-06", thinking: true)
+# Enable thinking with model defaults
+response = client.chat("What is 25 * 25?", model: OmniAI::Google::Chat::Model::GEMINI_PRO, thinking: true)
 ```
 
-#### Accessing Thinking Content
+##### Thinking Effort
+
+Control how much the model thinks using the `effort` option (`"low"`, `"medium"`, or `"high"`):
 
 ```ruby
-response.choices.first.message.contents.each do |content|
-  case content
+# High effort (more reasoning tokens)
+response = client.chat("Solve this step by step.", model: OmniAI::Google::Chat::Model::GEMINI_PRO, thinking: { effort: "high" })
+
+# Medium effort
+response = client.chat("Explain briefly.", model: OmniAI::Google::Chat::Model::GEMINI_PRO, thinking: { effort: "medium" })
+
+# Low effort (fewer reasoning tokens)
+response = client.chat("What is 1+1?", model: OmniAI::Google::Chat::Model::GEMINI_PRO, thinking: { effort: "low" })
+```
+
+##### Accessing Thinking Content
+
+```ruby
+response.choices.first.message.content.each do |part|
+  case part
   when OmniAI::Chat::Thinking
-    puts "Thinking: #{content.thinking}"
+    puts "Thinking: #{part.thinking}"
   when OmniAI::Chat::Text
-    puts "Response: #{content.text}"
+    puts "Response: #{part.text}"
   end
 end
 ```
 
-#### Streaming with Thinking
+##### Streaming with Thinking
 
 ```ruby
-client.chat("What are the prime factors of 1234567?", model: "gemini-2.5-pro-preview-05-06", thinking: true, stream: $stdout)
+client.chat("What are the prime factors of 1234567?", model: OmniAI::Google::Chat::Model::GEMINI_PRO, thinking: true, stream: $stdout)
 ```
 
 [Google API Reference `thinking`](https://ai.google.dev/gemini-api/docs/thinking)
