@@ -201,6 +201,84 @@ RSpec.describe OmniAI::Google::Chat do
       it { expect(completion.text).to eql("Two elephants fall off a cliff. Boom! Boom!") }
     end
 
+    context "with thinking: { effort: 'high' } option" do
+      subject(:completion) { described_class.process!(prompt, client:, model:, thinking: { effort: "high" }) }
+
+      let(:prompt) { "Tell me a joke!" }
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
+          .with(body: {
+            generationConfig: { thinkingConfig: { includeThoughts: true, thinkingLevel: "HIGH" } },
+            contents: [
+              { role: "user", parts: [{ text: "Tell me a joke!" }] },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{
+              content: {
+                role: "assistant",
+                parts: [{ text: "Two elephants fall off a cliff. Boom! Boom!" }],
+              },
+            }],
+          })
+      end
+
+      it { expect(completion.text).to eql("Two elephants fall off a cliff. Boom! Boom!") }
+    end
+
+    context "with thinking: { effort: 'medium' } option" do
+      subject(:completion) { described_class.process!(prompt, client:, model:, thinking: { effort: "medium" }) }
+
+      let(:prompt) { "Tell me a joke!" }
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
+          .with(body: {
+            generationConfig: { thinkingConfig: { includeThoughts: true, thinkingLevel: "MEDIUM" } },
+            contents: [
+              { role: "user", parts: [{ text: "Tell me a joke!" }] },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{
+              content: {
+                role: "assistant",
+                parts: [{ text: "Two elephants fall off a cliff. Boom! Boom!" }],
+              },
+            }],
+          })
+      end
+
+      it { expect(completion.text).to eql("Two elephants fall off a cliff. Boom! Boom!") }
+    end
+
+    context "with thinking: { effort: nil } option" do
+      subject(:completion) { described_class.process!(prompt, client:, model:, thinking: { effort: nil }) }
+
+      let(:prompt) { "Tell me a joke!" }
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
+          .with(body: {
+            generationConfig: { thinkingConfig: { includeThoughts: true } },
+            contents: [
+              { role: "user", parts: [{ text: "Tell me a joke!" }] },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{
+              content: {
+                role: "assistant",
+                parts: [{ text: "Two elephants fall off a cliff. Boom! Boom!" }],
+              },
+            }],
+          })
+      end
+
+      it { expect(completion.text).to eql("Two elephants fall off a cliff. Boom! Boom!") }
+    end
+
     context "when using files / URLs" do
       let(:io) { Tempfile.new }
 

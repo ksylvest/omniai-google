@@ -17,11 +17,12 @@ module OmniAI
         GEMINI_1_5_PRO = "gemini-1.5-pro"
         GEMINI_2_5_PRO = "gemini-2.5-pro"
         GEMINI_3_0_PRO = "gemini-3-pro-preview"
+        GEMINI_3_1_PRO = "gemini-3.1-pro-preview"
         GEMINI_1_5_FLASH = "gemini-1.5-flash"
         GEMINI_2_0_FLASH = "gemini-2.0-flash"
         GEMINI_2_5_FLASH = "gemini-2.5-flash"
         GEMINI_3_FLASH = "gemini-3-flash-preview"
-        GEMINI_PRO = GEMINI_3_0_PRO
+        GEMINI_PRO = GEMINI_3_1_PRO
         GEMINI_FLASH = GEMINI_3_FLASH
       end
 
@@ -132,7 +133,7 @@ module OmniAI
           end
 
         data[:temperature] = @temperature if @temperature
-        data[:thinkingConfig] = thinking_config if thinking_config
+        data[:thinkingConfig] = thinking_config if @options[:thinking]
 
         data = data.compact
         data unless data.empty?
@@ -148,17 +149,17 @@ module OmniAI
         stream? ? "streamGenerateContent" : "generateContent"
       end
 
-      # Translates unified thinking option to Google's thinkingConfig format.
-      # Example: `thinking: true` becomes `{ includeThoughts: true }`
       # @return [Hash, nil]
       def thinking_config
         thinking = @options[:thinking]
         return unless thinking
+        return { includeThoughts: true } unless thinking.is_a?(Hash)
 
-        case thinking
-        when true then { includeThoughts: true }
-        when Hash then { includeThoughts: true }.merge(thinking)
-        end
+        config = { includeThoughts: true }
+        return config.merge(thinking) unless thinking.key?(:effort)
+
+        config[:thinkingLevel] = thinking[:effort].upcase if thinking[:effort]
+        config
       end
 
       # @return [Array<Message>]
