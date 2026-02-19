@@ -104,7 +104,7 @@ module OmniAI
         return unless tools?
 
         [
-          function_declarations: custom_tools.map { |tool| tool.serialize(context:) },
+          { function_declarations: custom_tools.map { |tool| tool.serialize(context:) } },
         ].concat(internal_tools.map { |name| { name => {} } })
       end
 
