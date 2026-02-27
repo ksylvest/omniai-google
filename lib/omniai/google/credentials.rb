@@ -23,7 +23,7 @@ module OmniAI
         case value
         when IO, StringIO then ::Google::Auth::ServiceAccountCredentials.make_creds(json_key_io: value, scope: SCOPE)
         when Hash then parse(JSON.generate(value))
-        when Pathname then parse(File.open(value))
+        when Pathname then File.open(value) { |file| parse(file) }
         when String then parse(StringIO.new(value))
         else value
         end

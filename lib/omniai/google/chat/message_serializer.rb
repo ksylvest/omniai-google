@@ -34,8 +34,7 @@ module OmniAI
             end
           end
 
-          tool_call_list = parts.select { |part| part.is_a?(OmniAI::Chat::ToolCall) }
-          content = parts.reject { |part| part.is_a?(OmniAI::Chat::ToolCall) }
+          tool_call_list, content = parts.partition { |part| part.is_a?(OmniAI::Chat::ToolCall) }
 
           OmniAI::Chat::Message.new(content:, role:, tool_call_list:)
         end
