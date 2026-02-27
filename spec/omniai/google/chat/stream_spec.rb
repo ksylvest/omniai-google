@@ -165,6 +165,99 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       end
     end
 
+    context "when a candidate has content without parts followed by content with parts" do
+      let(:chunks) do
+        [
+          {
+            candidates: [
+              {
+                content: {},
+                finishReason: "STOP",
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "Hello" }],
+                },
+                index: 0,
+              },
+            ],
+          },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "merges correctly" do
+        expect(stream!).to eql({
+          "candidates" => [
+            {
+              "content" => {
+                "parts" => [
+                  { "text" => "Hello" },
+                ],
+              },
+              "finishReason" => "STOP",
+            },
+          ],
+        })
+      end
+
+      it "yields only for chunks with parts" do
+        stream!
+        expect(deltas.map(&:text)).to eql(["Hello"])
+      end
+    end
+
+    context "when a candidate has content without parts" do
+      let(:chunks) do
+        [
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "Hello" }],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {},
+                finishReason: "STOP",
+              },
+            ],
+          },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "merges correctly" do
+        expect(stream!).to eql({
+          "candidates" => [
+            {
+              "content" => {
+                "role" => "model",
+                "parts" => [
+                  { "text" => "Hello" },
+                ],
+              },
+              "index" => 0,
+            },
+          ],
+        })
+      end
+
+      it "yields only for chunks with parts" do
+        stream!
+        expect(deltas.map(&:text)).to eql(["Hello"])
+      end
+    end
+
     context "when parsing text and tool call list chunks" do
       let(:chunks) do
         [

@@ -68,10 +68,12 @@ RSpec.describe OmniAI::Google::Credentials do
 
     context "when value is a Google::Auth::ServiceAccountCredentials" do
       let(:value) do
-        Google::Auth::ServiceAccountCredentials.make_creds(
-          json_key_io: File.open(file.path),
-          scope: OmniAI::Google::Credentials::SCOPE
-        )
+        File.open(file.path) do |f|
+          Google::Auth::ServiceAccountCredentials.make_creds(
+            json_key_io: f,
+            scope: OmniAI::Google::Credentials::SCOPE
+          )
+        end
       end
 
       it "returns the credentials" do

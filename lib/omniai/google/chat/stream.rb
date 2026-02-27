@@ -44,7 +44,7 @@ module OmniAI
             @data[key] = value unless key.eql?("candidates")
           end
 
-          data["candidates"].each_with_index do |candidate, index|
+          data["candidates"]&.each_with_index do |candidate, index|
             process_candidate!(candidate:, index:, &block)
           end
         end
@@ -53,12 +53,12 @@ module OmniAI
         # @yieldparam delta [OmniAI::Chat::Delta]
         #
         # @param candidate [Hash]
+        # @param index [Integer]
         def process_candidate!(candidate:, index:, &block)
           return unless candidate["content"]
 
-          candidate["content"]["parts"].each do |part|
+          candidate["content"]["parts"]&.each do |part|
             if part["thought"]
-              # Google uses thought: true as a flag, content is in text
               block&.call(OmniAI::Chat::Delta.new(thinking: part["text"]))
             elsif part["text"]
               block&.call(OmniAI::Chat::Delta.new(text: part["text"]))
@@ -74,27 +74,23 @@ module OmniAI
           if @data["candidates"][index].nil?
             @data["candidates"][index] = candidate
           else
-            merge_parts!(parts: candidate["content"]["parts"], candidate: @data["candidates"][index])
+            (candidate["content"]["parts"] || []).each do |part|
+              merge_part!(part:, candidate: @data["candidates"][index])
+            end
           end
         end
 
-        # @param parts [Array<Hash>]
-        # @param candidate [Hash]
-        def merge_parts!(parts:, candidate:)
-          parts.each { |part| merge_part!(part:, candidate:) }
-        end
-
         # @param part [Hash]
-        # @param into [Hash]
+        # @param candidate [Hash]
         def merge_part!(part:, candidate:)
-          last_part = candidate["content"]["parts"][-1]
+          parts = candidate["content"]["parts"] ||= []
+          last_part = parts.last
 
-          if last_part&.key?("text") && part["text"]
+          if (last_part&.key?("text") && part.key?("text")) ||
+              (last_part&.key?("thought") && part.key?("thought"))
             last_part["text"] += part["text"]
-          elsif last_part&.key?("thought") && part["thought"]
-            last_part["thought"] += part["thought"]
           else
-            candidate["content"]["parts"] << part
+            parts << part
           end
         end
       end

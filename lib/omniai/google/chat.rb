@@ -110,7 +110,7 @@ module OmniAI
 
       # @return [Array<OmniAI::Tool>]
       def custom_tools
-        @tools.filter { |tool| tool.is_a?(OmniAI::Tool) }
+        @tools.grep(OmniAI::Tool)
       end
 
       # @return [Array<Symbol, String>]

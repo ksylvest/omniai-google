@@ -29,7 +29,7 @@ end
 # @example
 #   tool = WeatherTool.new
 #   tool.execute(location: "Toronto", unit: "celsius")
-class WeatherTool < OmniAI::Tool
+class WeatherTool < OmniAI::Tool # rubocop:disable Style/OneClassPerFile
   parameter :lat, :number, description: "The latitude of the location."
   parameter :lng, :number, description: "The longitude of the location."
   parameter :unit, :string, enum: %w[Celsius Fahrenheit], description: "The unit of measurement."
