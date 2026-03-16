@@ -28,7 +28,8 @@ module OmniAI
         def self.deserialize(data, *)
           tool_call_id = data["functionResponse"]["name"]
           content = data["functionResponse"]["response"]["content"]
-          OmniAI::Chat::ToolCallResult.new(content:, tool_call_id:)
+          options = { thought_signature: data["thoughtSignature"] }.compact
+          OmniAI::Chat::ToolCallResult.new(content:, tool_call_id:, **options)
         end
       end
     end
