@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    omniai-google (3.6.0)
+    omniai-google (3.7.0)
       event_stream_parser
       google-cloud-storage
       googleauth
@@ -116,7 +116,11 @@ GEM
     multi_json (1.19.1)
     net-http (0.9.1)
       uri (>= 0.11.1)
+<<<<<<< HEAD
     omniai (3.5.0)
+=======
+    omniai (3.4.0)
+>>>>>>> a7c2b81 (Add gemini-embedding-001 and gemini-embedding-2-preview models)
       base64
       event_stream_parser
       http (~> 5)

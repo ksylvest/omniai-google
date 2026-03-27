@@ -85,8 +85,9 @@ module OmniAI
       #
       # @param input [String, Array<String>, Array<Integer>] required
       # @param model [String] optional
-      def embed(input, model: Embed::DEFAULT_MODEL)
-        Embed.process!(input, model:, client: self)
+      # @param options [Hash] provider-specific options (e.g. task_type: "RETRIEVAL_DOCUMENT")
+      def embed(input, model: Embed::DEFAULT_MODEL, **options)
+        Embed.process!(input, model:, client: self, **options)
       end
 
       # @raise [OmniAI::Error]
