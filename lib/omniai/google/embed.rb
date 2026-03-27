@@ -44,7 +44,7 @@ module OmniAI
         prompt_tokens = data.dig("usageMetadata", "promptTokenCount")
         total_tokens = data.dig("usageMetadata", "totalTokenCount")
 
-        Usage.new(prompt_tokens: prompt_tokens, total_tokens: total_tokens)
+        Usage.new(prompt_tokens:, total_tokens:)
       end
 
       # @return [Context]
@@ -73,13 +73,14 @@ module OmniAI
       #
       # @return [Symbol] :embed_content, :predict, or :batch_embed_contents
       def endpoint
-        @endpoint ||= if @client.vertex? && @model.start_with?("gemini-embedding-2")
-          :embed_content
-        elsif @client.vertex?
-          :predict
-        else
-          :batch_embed_contents
-        end
+        @endpoint ||=
+          if @client.vertex? && @model.start_with?("gemini-embedding-2")
+            :embed_content
+          elsif @client.vertex?
+            :predict
+          else
+            :batch_embed_contents
+          end
       end
 
       # @return [Context]
@@ -106,7 +107,7 @@ module OmniAI
         raise ArgumentError, "embedContent does not support batch input" if @input.is_a?(Array) && @input.length > 1
 
         text = @input.is_a?(Array) ? @input.first : @input
-        result = { content: { parts: [{ text: text }] } }
+        result = { content: { parts: [{ text: }] } }
         result[:taskType] = @options[:task_type] if @options[:task_type]
         result
       end
@@ -126,11 +127,11 @@ module OmniAI
           requests: inputs.map do |text|
             request = {
               model: "models/#{@model}",
-              content: { parts: [{ text: text }] },
+              content: { parts: [{ text: }] },
             }
             request[:taskType] = @options[:task_type] if @options[:task_type]
             request
-          end
+          end,
         }
       end
 
@@ -139,15 +140,15 @@ module OmniAI
         { key: (@client.api_key unless @client.credentials?) }.compact
       end
 
+      PROCEDURES = {
+        embed_content: "embedContent",
+        predict: "predict",
+        batch_embed_contents: "batchEmbedContents",
+      }.freeze
+
       # @return [String]
       def path
-        procedure = case endpoint
-                    when :embed_content then "embedContent"
-                    when :predict then "predict"
-                    when :batch_embed_contents then "batchEmbedContents"
-                    end
-
-        "/#{@client.path}/models/#{@model}:#{procedure}"
+        "/#{@client.path}/models/#{@model}:#{PROCEDURES[endpoint]}"
       end
     end
   end

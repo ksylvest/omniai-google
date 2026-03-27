@@ -17,7 +17,7 @@ RSpec.describe OmniAI::Google::Embed do
           requests: [
             {
               model: "models/#{model}",
-              content: { parts: [{ text: text }] },
+              content: { parts: [{ text: }] },
             },
           ],
         })
@@ -51,7 +51,7 @@ RSpec.describe OmniAI::Google::Embed do
     context "with batch input (batchEmbedContents)" do
       subject(:process!) { described_class.process!(texts, client:, model:) }
 
-      let(:texts) { ["Hello", "World"] }
+      let(:texts) { %w[Hello World] }
 
       before do
         stub_request(:post, "https://generativelanguage.googleapis.com//v1beta/models/#{model}:batchEmbedContents?key=...")
@@ -69,7 +69,7 @@ RSpec.describe OmniAI::Google::Embed do
 
     context "without task_type (batchEmbedContents)" do
       it "does not include taskType in the payload" do
-        embed = described_class.new(text, client: client, model: model)
+        embed = described_class.new(text, client:, model:)
         payload = embed.send(:batch_embed_contents_payload)
         expect(payload[:requests].first).not_to have_key(:taskType)
       end
@@ -84,7 +84,7 @@ RSpec.describe OmniAI::Google::Embed do
             requests: [
               {
                 model: "models/#{model}",
-                content: { parts: [{ text: text }] },
+                content: { parts: [{ text: }] },
                 taskType: "RETRIEVAL_DOCUMENT",
               },
             ],
@@ -99,7 +99,7 @@ RSpec.describe OmniAI::Google::Embed do
     context "with vertex" do
       let(:client) do
         OmniAI::Google::Client.new(
-          credentials: credentials,
+          credentials:,
           host: "https://us-central1-aiplatform.googleapis.com",
           project_id: "test-project",
           location_id: "us-central1"
@@ -110,7 +110,7 @@ RSpec.describe OmniAI::Google::Embed do
         instance_double(Google::Auth::ServiceAccountCredentials, fetch_access_token!: nil, access_token: "token")
       end
 
-      context "with gemini-embedding-001 (predict)" do
+      context "with gemini-embedding-001 (predict)" do # rubocop:disable RSpec/NestedGroups
         let(:model) { described_class::Model::GEMINI_EMBEDDING_001 }
 
         before do
@@ -123,16 +123,16 @@ RSpec.describe OmniAI::Google::Embed do
 
         it { expect(process!).to be_a(OmniAI::Embed::Response) }
         it { expect(process!.embedding).to eql([0.0]) }
-        it { expect(process!.usage.total_tokens).to eql(10) }
+        it { expect(process!.usage.total_tokens).to be(10) }
       end
 
-      context "with gemini-embedding-2-preview (embedContent)" do
+      context "with gemini-embedding-2-preview (embedContent)" do # rubocop:disable RSpec/NestedGroups
         let(:model) { described_class::Model::GEMINI_EMBEDDING_2_PREVIEW }
 
         before do
           stub_request(:post, "https://us-central1-aiplatform.googleapis.com//v1beta/projects/test-project/locations/us-central1/publishers/google/models/#{model}:embedContent")
             .with(body: {
-              content: { parts: [{ text: text }] },
+              content: { parts: [{ text: }] },
             })
             .to_return_json(body: {
               embedding: { values: [0.0] },
@@ -142,16 +142,16 @@ RSpec.describe OmniAI::Google::Embed do
 
         it { expect(process!).to be_a(OmniAI::Embed::Response) }
         it { expect(process!.embedding).to eql([0.0]) }
-        it { expect(process!.usage.total_tokens).to eql(5) }
-        it { expect(process!.usage.prompt_tokens).to eql(5) }
+        it { expect(process!.usage.total_tokens).to be(5) }
+        it { expect(process!.usage.prompt_tokens).to be(5) }
 
-        context "with task_type" do
+        context "with task_type" do # rubocop:disable RSpec/NestedGroups
           subject(:process!) { described_class.process!(text, client:, model:, task_type: "RETRIEVAL_QUERY") }
 
           before do
             stub_request(:post, "https://us-central1-aiplatform.googleapis.com//v1beta/projects/test-project/locations/us-central1/publishers/google/models/#{model}:embedContent")
               .with(body: {
-                content: { parts: [{ text: text }] },
+                content: { parts: [{ text: }] },
                 taskType: "RETRIEVAL_QUERY",
               })
               .to_return_json(body: {
@@ -164,8 +164,8 @@ RSpec.describe OmniAI::Google::Embed do
           it { expect(process!.embedding).to eql([0.0]) }
         end
 
-        context "with batch input" do
-          let(:text) { ["Hello", "World"] }
+        context "with batch input" do # rubocop:disable RSpec/NestedGroups
+          let(:text) { %w[Hello World] }
 
           it { expect { process! }.to raise_error(ArgumentError, "embedContent does not support batch input") }
         end
