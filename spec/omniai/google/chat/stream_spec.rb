@@ -75,6 +75,84 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       end
     end
 
+    context "when parsing thought chunks followed by text chunks" do
+      let(:chunks) do
+        [
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "Let me ", thought: true }],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "think.", thought: true }],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "The answer " }],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "is 42." }],
+                },
+                index: 0,
+              },
+            ],
+          },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "keeps thought and answer parts separate so response.text is not absorbed into the thought" do
+        expect(stream!).to eql({
+          "candidates" => [
+            {
+              "content" => {
+                "role" => "model",
+                "parts" => [
+                  { "text" => "Let me think.", "thought" => true },
+                  { "text" => "The answer is 42." },
+                ],
+              },
+              "index" => 0,
+            },
+          ],
+        })
+      end
+
+      it "yields thinking deltas and text deltas separately" do
+        stream!
+        expect(deltas.map { |d| [d.text, d.thinking] }).to eql([
+          [nil, "Let me "],
+          [nil, "think."],
+          ["The answer ", nil],
+          ["is 42.", nil],
+        ])
+      end
+    end
+
     context "when parsing tool call list chunks" do
       let(:chunks) do
         [
@@ -255,6 +333,77 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       it "yields only for chunks with parts" do
         stream!
         expect(deltas.map(&:text)).to eql(["Hello"])
+      end
+    end
+
+    context "when parsing function-call chunks followed by text chunks" do
+      let(:chunks) do
+        [
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [
+                    {
+                      functionCall: { name: "weather", arguments: JSON.generate(location: "Madrid") },
+                    },
+                  ],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "It's " }],
+                },
+                index: 0,
+              },
+            ],
+          },
+          {
+            candidates: [
+              {
+                content: {
+                  role: "model",
+                  parts: [{ text: "sunny." }],
+                },
+                index: 0,
+              },
+            ],
+          },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "keeps the function-call and text parts separate" do
+        expect(stream!).to eql({
+          "candidates" => [
+            {
+              "content" => {
+                "role" => "model",
+                "parts" => [
+                  {
+                    "functionCall" => {
+                      "name" => "weather",
+                      "arguments" => JSON.generate(location: "Madrid"),
+                    },
+                  },
+                  { "text" => "It's sunny." },
+                ],
+              },
+              "index" => 0,
+            },
+          ],
+        })
+      end
+
+      it "yields text deltas only (no delta for the function-call)" do
+        stream!
+        expect(deltas.map(&:text)).to eql(["It's ", "sunny."])
       end
     end
 
