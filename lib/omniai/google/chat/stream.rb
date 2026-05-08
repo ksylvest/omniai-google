@@ -86,12 +86,40 @@ module OmniAI
           parts = candidate["content"]["parts"] ||= []
           last_part = parts.last
 
-          if (last_part&.key?("text") && part.key?("text")) ||
-              (last_part&.key?("thought") && part.key?("thought"))
+          if can_concatenate?(last_part, part)
             last_part["text"] += part["text"]
           else
             parts << part
           end
+        end
+
+        # True when `part` should concatenate into `last_part` rather than appear
+        # as a new part. Two parts merge only when they're the same kind: both
+        # text parts AND they agree on whether they're a reasoning (thought) chunk
+        # or an answer chunk. Without the thought-state check, an answer chunk
+        # arriving after thought chunks would coalesce into the trailing thought,
+        # marking the visible answer as `thought: true` and causing callers to see
+        # an empty `response.text`.
+        #
+        # @param last_part [Hash, nil]
+        # @param part [Hash]
+        # @return [Boolean]
+        def can_concatenate?(last_part, part)
+          return false if last_part.nil?
+          return false unless last_part.key?("text") && part.key?("text")
+
+          thought_part?(last_part) == thought_part?(part)
+        end
+
+        # Gemini may omit the "thought" key entirely on answer parts (so it's nil),
+        # or set it explicitly to `false`, or `true` for thought parts. Normalize to
+        # a single boolean so the comparison in can_concatenate? treats nil and false
+        # as equivalent (both = "this is an answer part, not a thought part").
+        #
+        # @param part [Hash]
+        # @return [Boolean]
+        def thought_part?(part)
+          part["thought"] == true
         end
       end
     end
