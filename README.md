@@ -87,7 +87,7 @@ completion.text # 'The capital of Canada is Ottawa.'
 
 #### Model
 
-`model` takes an optional string (default is `gemini-3-flash-preview`):
+`model` takes an optional string (default is `gemini-3.5-flash`):
 
 ```ruby
 completion = client.chat('How fast is a cheetah?', model: OmniAI::Google::Chat::Model::GEMINI_FLASH)
