@@ -286,9 +286,12 @@ client.transcribe("audio.mp3", model: OmniAI::Google::Transcribe::Model::CHIRP) 
 - `OmniAI::Google::Transcribe::Model::MEDICAL_CONVERSATION` - For medical conversations
 - `OmniAI::Google::Transcribe::Model::MEDICAL_DICTATION` - For medical dictation
 
-> **Region note:** `CHIRP_3` is only served from the `us` and `eu` multi-region endpoints. The provider
-> defaults to `us`; to use the EU endpoint, set `location_id: "eu"` on the client (or `GOOGLE_LOCATION_ID=eu`).
-> `CHIRP_2` is always routed to `us-central1`.
+> **Region note:** `CHIRP_3` is only served from the `us` and `eu` multi-region endpoints (not `global`,
+> and not zonal regions like `us-east4`). The provider maps the configured `location_id` to its
+> multi-region parent — any `us*` region resolves to `us`, any `eu`/`europe*` region resolves to `eu` —
+> and defaults to `us` when nothing is configured. This means a Vertex AI client configured with a zonal
+> `location_id` (e.g. `us-east4`) for Gemini will still route `CHIRP_3` correctly. `CHIRP_2` is always
+> routed to `us-central1`.
 
 #### Supported Formats
 
