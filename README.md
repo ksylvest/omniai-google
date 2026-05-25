@@ -266,20 +266,29 @@ client.transcribe("phone_call.mp3", model: OmniAI::Google::Transcribe::Model::TE
 # For medical conversations
 client.transcribe("medical_interview.mp3", model: OmniAI::Google::Transcribe::Model::MEDICAL_CONVERSATION)
 
+# Latest generation multilingual model (recommended)
+client.transcribe("audio.mp3", model: OmniAI::Google::Transcribe::Model::CHIRP_3)
+
 # Other available models
 client.transcribe("audio.mp3", model: OmniAI::Google::Transcribe::Model::CHIRP_2) # Enhanced model
 client.transcribe("audio.mp3", model: OmniAI::Google::Transcribe::Model::CHIRP)   # Universal model
 ```
 
 **Available Model Constants:**
-- `OmniAI::Google::Transcribe::Model::LATEST_SHORT` - Optimized for audio < 60 seconds
-- `OmniAI::Google::Transcribe::Model::LATEST_LONG` - Optimized for long-form audio
-- `OmniAI::Google::Transcribe::Model::TELEPHONY_SHORT` - For short phone calls
-- `OmniAI::Google::Transcribe::Model::TELEPHONY_LONG` - For long phone calls  
-- `OmniAI::Google::Transcribe::Model::MEDICAL_CONVERSATION` - For medical conversations
-- `OmniAI::Google::Transcribe::Model::MEDICAL_DICTATION` - For medical dictation
+- `OmniAI::Google::Transcribe::Model::CHIRP_3` - Latest-generation multilingual ASR model (recommended)
 - `OmniAI::Google::Transcribe::Model::CHIRP_2` - Enhanced universal model
 - `OmniAI::Google::Transcribe::Model::CHIRP` - Universal model
+- `OmniAI::Google::Transcribe::Model::LATEST_SHORT` - Optimized for audio < 60 seconds
+- `OmniAI::Google::Transcribe::Model::LATEST_LONG` - Optimized for long-form audio
+- `OmniAI::Google::Transcribe::Model::TELEPHONY` - For phone/telephony audio
+- `OmniAI::Google::Transcribe::Model::TELEPHONY_SHORT` - For short phone calls
+- `OmniAI::Google::Transcribe::Model::TELEPHONY_LONG` - For long phone calls
+- `OmniAI::Google::Transcribe::Model::MEDICAL_CONVERSATION` - For medical conversations
+- `OmniAI::Google::Transcribe::Model::MEDICAL_DICTATION` - For medical dictation
+
+> **Region note:** `CHIRP_3` is only served from the `us` and `eu` multi-region endpoints. The provider
+> defaults to `us`; to use the EU endpoint, set `location_id: "eu"` on the client (or `GOOGLE_LOCATION_ID=eu`).
+> `CHIRP_2` is always routed to `us-central1`.
 
 #### Supported Formats
 

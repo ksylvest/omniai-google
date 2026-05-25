@@ -17,6 +17,10 @@ module OmniAI
         case @model
         when "chirp_2"
           "us-central1"
+        when "chirp_3"
+          # Chirp 3 is only served from the `us` and `eu` multi-region endpoints (not `global`).
+          # Respect an explicitly configured location (e.g. "eu"), otherwise default to "us".
+          @client.instance_variable_get(:@location_id) || "us"
         else
           @client.instance_variable_get(:@location_id) || "global"
         end

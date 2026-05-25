@@ -12,10 +12,12 @@ module OmniAI
       include TranscribeHelpers
 
       module Model
+        CHIRP_3 = "chirp_3"
         CHIRP_2 = "chirp_2"
         CHIRP = "chirp"
         LATEST_LONG = "latest_long"
         LATEST_SHORT = "latest_short"
+        TELEPHONY = "telephony"
         TELEPHONY_LONG = "telephony_long"
         TELEPHONY_SHORT = "telephony_short"
         MEDICAL_CONVERSATION = "medical_conversation"
