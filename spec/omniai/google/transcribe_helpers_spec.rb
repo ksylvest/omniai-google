@@ -54,6 +54,36 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
         expect(transcribe.send(:location_id)).to eq "global"
       end
     end
+
+    context "with chirp_2 model" do
+      subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "chirp_2") }
+
+      it "forces the us-central1 region" do
+        expect(transcribe.send(:location_id)).to eq "us-central1"
+      end
+    end
+
+    context "with chirp_3 model and no configured location_id" do
+      subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "chirp_3") }
+
+      let(:client) { OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project") }
+
+      it "defaults to the us multi-region" do
+        expect(transcribe.send(:location_id)).to eq "us"
+      end
+    end
+
+    context "with chirp_3 model and an explicit location_id" do
+      subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "chirp_3") }
+
+      let(:client) do
+        OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "eu")
+      end
+
+      it "respects the configured location_id" do
+        expect(transcribe.send(:location_id)).to eq "eu"
+      end
+    end
   end
 
   describe "#speech_endpoint" do
@@ -74,6 +104,17 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
       it "returns regional speech endpoint" do
         endpoint = transcribe.send(:speech_endpoint)
         expect(endpoint).to eq "https://us-central1-speech.googleapis.com"
+      end
+    end
+
+    context "with chirp_3 multi-region location" do
+      subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "chirp_3") }
+
+      let(:client) { OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project") }
+
+      it "returns the multi-region speech endpoint" do
+        endpoint = transcribe.send(:speech_endpoint)
+        expect(endpoint).to eq "https://us-speech.googleapis.com"
       end
     end
   end
