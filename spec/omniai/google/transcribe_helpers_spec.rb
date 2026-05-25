@@ -63,6 +63,14 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
       end
     end
 
+    context "with telephony model" do
+      subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "telephony") }
+
+      it "uses the configured location_id without region forcing" do
+        expect(transcribe.send(:location_id)).to eq "us-central1"
+      end
+    end
+
     context "with chirp_3 model and no configured location_id" do
       subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "chirp_3") }
 
@@ -73,14 +81,38 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
       end
     end
 
-    context "with chirp_3 model and an explicit location_id" do
+    context "with chirp_3 model and a zonal us location_id (Vertex)" do
       subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "chirp_3") }
 
       let(:client) do
-        OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "eu")
+        OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "us-east4")
       end
 
-      it "respects the configured location_id" do
+      it "maps the zonal region to the us multi-region" do
+        expect(transcribe.send(:location_id)).to eq "us"
+      end
+    end
+
+    context "with chirp_3 model and a global location_id" do
+      subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "chirp_3") }
+
+      let(:client) do
+        OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "global")
+      end
+
+      it "falls back to the us multi-region (chirp_3 is not on global)" do
+        expect(transcribe.send(:location_id)).to eq "us"
+      end
+    end
+
+    context "with chirp_3 model and a european location_id" do
+      subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "chirp_3") }
+
+      let(:client) do
+        OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "europe-west4")
+      end
+
+      it "maps the european region to the eu multi-region" do
         expect(transcribe.send(:location_id)).to eq "eu"
       end
     end
@@ -256,6 +288,14 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
       end
     end
 
+    context "with chirp_3 model" do
+      let(:model) { "chirp_3" }
+
+      it "returns true (routes chirp_3 to BatchRecognize)" do
+        expect(transcribe.send(:needs_long_form_recognition?)).to be true
+      end
+    end
+
     context "with latest_long model" do
       let(:model) { "latest_long" }
 
@@ -314,6 +354,14 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
 
     context "with chirp model" do
       let(:model) { "chirp" }
+
+      it "returns auto for chirp models" do
+        expect(transcribe.send(:default_language_codes)).to eq ["auto"]
+      end
+    end
+
+    context "with chirp_3 model" do
+      let(:model) { "chirp_3" }
 
       it "returns auto for chirp models" do
         expect(transcribe.send(:default_language_codes)).to eq ["auto"]

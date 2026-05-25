@@ -18,11 +18,22 @@ module OmniAI
         when "chirp_2"
           "us-central1"
         when "chirp_3"
-          # Chirp 3 is only served from the `us` and `eu` multi-region endpoints (not `global`).
-          # Respect an explicitly configured location (e.g. "eu"), otherwise default to "us".
-          @client.instance_variable_get(:@location_id) || "us"
+          chirp_3_location_id
         else
           @client.instance_variable_get(:@location_id) || "global"
+        end
+      end
+
+      # Chirp 3 is only served from the `us` and `eu` multi-region endpoints (not `global`, and
+      # not zonal regions like `us-east4`). A Vertex client typically configures a zonal
+      # `location_id` for Gemini, so map any configured region to its multi-region parent and
+      # default to `us`.
+      #
+      # @return [String] "us" or "eu"
+      def chirp_3_location_id
+        case @client.instance_variable_get(:@location_id)
+        when /\A(eu|europe)/i then "eu"
+        else "us"
         end
       end
 
