@@ -42,6 +42,19 @@ module OmniAI
         location_id == "global" ? "https://speech.googleapis.com" : "https://#{location_id}-speech.googleapis.com"
       end
 
+      # Normalizes the client timeout into keyword args for HTTP.rb's `.timeout`. The speech
+      # endpoints build their own connections, so (unlike the base client, which passes the
+      # value straight through) they must accept both a scalar and a per-operation Hash. A Hash
+      # is passed through untouched; a scalar (or nil) is wrapped per-operation as before.
+      #
+      # @return [Hash]
+      def http_timeout_options
+        timeout = @client.timeout
+        return timeout if timeout.is_a?(Hash)
+
+        { connect: timeout, write: timeout, read: timeout }
+      end
+
       # @return [Array<String>, nil]
       def language_codes
         case @language
@@ -199,7 +212,7 @@ module OmniAI
       def poll_operation!(operation_name)
         endpoint = speech_endpoint
         connection = HTTP.persistent(endpoint)
-          .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
+          .timeout(**http_timeout_options)
           .accept(:json)
 
         # Add authentication if using credentials
@@ -237,7 +250,7 @@ module OmniAI
       def request_batch!
         endpoint = speech_endpoint
         connection = HTTP.persistent(endpoint)
-          .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
+          .timeout(**http_timeout_options)
           .accept(:json)
 
         # Add authentication if using credentials

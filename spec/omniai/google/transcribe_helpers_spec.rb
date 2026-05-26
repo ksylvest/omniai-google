@@ -151,6 +151,37 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
     end
   end
 
+  describe "#http_timeout_options" do
+    context "with a scalar timeout" do
+      let(:client) do
+        OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", timeout: 5)
+      end
+
+      it "wraps the scalar into per-operation values" do
+        expect(transcribe.send(:http_timeout_options)).to eq(connect: 5, write: 5, read: 5)
+      end
+    end
+
+    context "with a Hash timeout (per-operation)" do
+      let(:client) do
+        OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project",
+          timeout: { connect: 10, read: 300, write: 30 })
+      end
+
+      it "passes the Hash through untouched" do
+        expect(transcribe.send(:http_timeout_options)).to eq(connect: 10, read: 300, write: 30)
+      end
+    end
+
+    context "with no timeout configured" do
+      let(:client) { OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project") }
+
+      it "wraps nil per-operation (preserving prior behavior)" do
+        expect(transcribe.send(:http_timeout_options)).to eq(connect: nil, write: nil, read: nil)
+      end
+    end
+  end
+
   describe "#language_codes" do
     subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "latest_short", language:) }
 

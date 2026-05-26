@@ -113,7 +113,7 @@ module OmniAI
         # Speech-to-Text API uses different endpoints for regional vs global
         endpoint = speech_endpoint
         speech_connection = HTTP.persistent(endpoint)
-          .timeout(connect: @client.timeout, write: @client.timeout, read: @client.timeout)
+          .timeout(**http_timeout_options)
           .accept(:json)
 
         # Add authentication if using credentials
