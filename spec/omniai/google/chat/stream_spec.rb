@@ -278,6 +278,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                 ],
               },
               "finishReason" => "STOP",
+              "index" => 0,
             },
           ],
         })
@@ -325,6 +326,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                 ],
               },
               "index" => 0,
+              "finishReason" => "STOP",
             },
           ],
         })
@@ -333,6 +335,50 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       it "yields only for chunks with parts" do
         stream!
         expect(deltas.map(&:text)).to eql(["Hello"])
+      end
+    end
+
+    context "when finishReason arrives on a terminal chunk with no content (the real Gemini ordering)" do
+      let(:chunks) do
+        [
+          {
+            candidates: [
+              { content: { role: "model", parts: [{ text: "Hello" }] }, index: 0 },
+            ],
+          },
+          {
+            candidates: [
+              { content: { role: "model", parts: [{ text: " World" }] }, index: 0 },
+            ],
+          },
+          {
+            candidates: [
+              { finishReason: "MAX_TOKENS", index: 0 },
+            ],
+          },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "preserves finishReason on the assembled candidate" do
+        expect(stream!).to eql({
+          "candidates" => [
+            {
+              "content" => {
+                "role" => "model",
+                "parts" => [
+                  { "text" => "Hello World" },
+                ],
+              },
+              "index" => 0,
+              "finishReason" => "MAX_TOKENS",
+            },
+          ],
+        })
+      end
+
+      it "yields each text chunk" do
+        stream!
+        expect(deltas.map(&:text)).to eql(["Hello", " World"])
       end
     end
 

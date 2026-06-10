@@ -24,11 +24,13 @@ RSpec.describe OmniAI::Google::Chat do
                 role: "assistant",
                 parts: [{ text: "Two elephants fall off a cliff. Boom! Boom!" }],
               },
+              finishReason: "STOP",
             }],
           })
       end
 
       it { expect(completion.text).to eql("Two elephants fall off a cliff. Boom! Boom!") }
+      it { expect(completion.finish_reason.reason).to eq(:stop) }
     end
 
     context "with an array prompt" do
@@ -109,10 +111,12 @@ RSpec.describe OmniAI::Google::Chat do
             data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'Hello' }], role: 'model' }, index: 0 }])}\n
             data: #{JSON.generate(candidates: [{ content: { parts: [{ text: ' ' }], role: 'model' }, index: 0 }])}\n
             data: #{JSON.generate(candidates: [{ content: { parts: [{ text: 'World' }], role: 'model' }, index: 0 }])}\n
+            data: #{JSON.generate(candidates: [{ finishReason: 'STOP', index: 0 }])}\n
           STREAM
       end
 
       it { expect(completion.text).to eql("Hello World") }
+      it { expect(completion.finish_reason.reason).to eq(:stop) }
     end
 
     context "when formatting as JSON" do
