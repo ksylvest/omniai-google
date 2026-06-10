@@ -55,9 +55,7 @@ module OmniAI
         # @param candidate [Hash]
         # @param index [Integer]
         def process_candidate!(candidate:, index:, &block)
-          return unless candidate["content"]
-
-          candidate["content"]["parts"]&.each do |part|
+          candidate.dig("content", "parts")&.each do |part|
             if part["thought"]
               block&.call(OmniAI::Chat::Delta.new(thinking: part["text"]))
             elsif part["text"]
@@ -73,16 +71,29 @@ module OmniAI
         def merge_candidate!(candidate:, index:)
           if @data["candidates"][index].nil?
             @data["candidates"][index] = candidate
-          else
-            (candidate["content"]["parts"] || []).each do |part|
-              merge_part!(part:, candidate: @data["candidates"][index])
-            end
+            return
+          end
+
+          existing = @data["candidates"][index]
+
+          candidate.dig("content", "parts")&.each do |part|
+            merge_part!(part:, candidate: existing)
+          end
+
+          # Preserve top-level candidate keys (most importantly `finishReason`) that arrive on a later — usually
+          # terminal — chunk after the content has already streamed. Without this, the reason a generation stopped
+          # (e.g. MAX_TOKENS / SAFETY) is silently dropped from the assembled response.
+          candidate.each do |key, value|
+            next if key.eql?("content")
+
+            existing[key] = value
           end
         end
 
         # @param part [Hash]
         # @param candidate [Hash]
         def merge_part!(part:, candidate:)
+          candidate["content"] ||= {}
           parts = candidate["content"]["parts"] ||= []
           last_part = parts.last
 
