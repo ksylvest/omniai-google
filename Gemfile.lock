@@ -118,7 +118,7 @@ GEM
     omniai (3.7.0)
       base64
       event_stream_parser
-      http (~> 5)
+      http (>= 5, < 7)
       logger
       zeitwerk
     openssl (4.0.2)
