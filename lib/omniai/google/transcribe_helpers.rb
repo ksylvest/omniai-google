@@ -45,12 +45,14 @@ module OmniAI
       # Normalizes the client timeout into keyword args for HTTP.rb's `.timeout`. The speech
       # endpoints build their own connections, so (unlike the base client, which passes the
       # value straight through) they must accept both a scalar and a per-operation Hash. A Hash
-      # is passed through untouched; a scalar (or nil) is wrapped per-operation as before.
+      # is passed through untouched; a scalar is wrapped per-operation. When no timeout is set, returns `:null`
+      # (the http "no timeout" sentinel) — http 6 rejects nil per-operation values, http 5 accepts `:null` too.
       #
-      # @return [Hash]
+      # @return [Hash, Symbol]
       def http_timeout_options
         timeout = @client.timeout
         return timeout if timeout.is_a?(Hash)
+        return :null if timeout.nil?
 
         { connect: timeout, write: timeout, read: timeout }
       end
@@ -212,7 +214,7 @@ module OmniAI
       def poll_operation!(operation_name)
         endpoint = speech_endpoint
         connection = HTTP.persistent(endpoint)
-          .timeout(**http_timeout_options)
+          .timeout(http_timeout_options)
           .accept(:json)
 
         # Add authentication if using credentials
@@ -250,7 +252,7 @@ module OmniAI
       def request_batch!
         endpoint = speech_endpoint
         connection = HTTP.persistent(endpoint)
-          .timeout(**http_timeout_options)
+          .timeout(http_timeout_options)
           .accept(:json)
 
         # Add authentication if using credentials

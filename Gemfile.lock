@@ -16,7 +16,7 @@ GEM
       public_suffix (>= 2.0.2, < 8.0)
     ast (2.4.3)
     base64 (0.3.0)
-    bigdecimal (4.1.0)
+    bigdecimal (4.1.2)
     crack (1.0.1)
       bigdecimal
       rexml
@@ -37,31 +37,18 @@ GEM
       faraday (>= 1, < 3)
     faraday-net_http (3.4.4)
       net-http (~> 0.5)
-    ffi (1.17.4)
-    ffi (1.17.4-aarch64-linux-gnu)
-    ffi (1.17.4-aarch64-linux-musl)
-    ffi (1.17.4-arm-linux-gnu)
-    ffi (1.17.4-arm-linux-musl)
-    ffi (1.17.4-arm64-darwin)
-    ffi (1.17.4-x86-linux-gnu)
-    ffi (1.17.4-x86-linux-musl)
-    ffi (1.17.4-x86_64-darwin)
-    ffi (1.17.4-x86_64-linux-gnu)
-    ffi (1.17.4-x86_64-linux-musl)
-    ffi-compiler (1.3.2)
-      ffi (>= 1.15.5)
-      rake
-    google-apis-core (1.0.2)
+    google-apis-core (1.2.2)
       addressable (~> 2.8, >= 2.8.7)
       faraday (~> 2.13)
       faraday-follow_redirects (~> 0.3)
       googleauth (~> 1.14)
       mini_mime (~> 1.1)
+      multi_json (~> 1.11)
       representable (~> 3.0)
-      retriable (~> 3.1)
+      retriable (>= 3.1, < 5.0)
     google-apis-iamcredentials_v1 (0.27.0)
       google-apis-core (>= 0.15.0, < 2.a)
-    google-apis-storage_v1 (0.62.0)
+    google-apis-storage_v1 (0.63.0)
       google-apis-core (>= 0.15.0, < 2.a)
     google-cloud-core (1.8.0)
       google-cloud-env (>= 1.0, < 3.a)
@@ -89,14 +76,11 @@ GEM
       pstore (~> 0.1)
       signet (>= 0.16, < 2.a)
     hashdiff (1.2.1)
-    http (5.3.1)
-      addressable (~> 2.8)
+    http (6.0.3)
       http-cookie (~> 1.0)
-      http-form_data (~> 2.2)
-      llhttp-ffi (~> 0.5.0)
-    http-cookie (1.1.0)
+      llhttp (~> 0.6.1)
+    http-cookie (1.1.6)
       domain_name (~> 0.5)
-    http-form_data (2.3.0)
     io-console (0.8.2)
     irb (1.18.0)
       pp (>= 0.6.0)
@@ -108,11 +92,10 @@ GEM
       base64
     language_server-protocol (3.17.0.5)
     lint_roller (1.1.0)
-    llhttp-ffi (0.5.1)
-      ffi-compiler (~> 1.0)
-      rake (~> 13.0)
+    llhttp (0.6.1)
     logger (1.7.0)
     mini_mime (1.1.5)
+    multi_json (1.21.1)
     net-http (0.9.1)
       uri (>= 0.11.1)
     omniai (3.7.0)
@@ -132,7 +115,7 @@ GEM
     prettyprint (0.2.0)
     prism (1.9.0)
     pstore (0.2.1)
-    psych (5.3.1)
+    psych (5.4.0)
       date
       stringio
     public_suffix (7.0.5)
@@ -151,7 +134,7 @@ GEM
       declarative (< 0.1.0)
       trailblazer-option (>= 0.1.1, < 0.2.0)
       uber (< 0.2.0)
-    retriable (3.4.1)
+    retriable (4.1.1)
     rexml (3.4.4)
     rspec (3.13.2)
       rspec-core (~> 3.13.0)
@@ -217,17 +200,8 @@ GEM
     zeitwerk (2.8.2)
 
 PLATFORMS
-  aarch64-linux-gnu
-  aarch64-linux-musl
-  arm-linux-gnu
-  arm-linux-musl
-  arm64-darwin
+  arm64-darwin-24
   ruby
-  x86-linux-gnu
-  x86-linux-musl
-  x86_64-darwin
-  x86_64-linux-gnu
-  x86_64-linux-musl
 
 DEPENDENCIES
   irb

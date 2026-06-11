@@ -176,8 +176,8 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
     context "with no timeout configured" do
       let(:client) { OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project") }
 
-      it "wraps nil per-operation (preserving prior behavior)" do
-        expect(transcribe.send(:http_timeout_options)).to eq(connect: nil, write: nil, read: nil)
+      it "returns :null (the http no-timeout sentinel; http 6 rejects nil per-operation values)" do
+        expect(transcribe.send(:http_timeout_options)).to eq(:null)
       end
     end
   end
