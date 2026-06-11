@@ -50,7 +50,7 @@ RSpec.describe OmniAI::Google::Client do
   describe "#connection" do
     context "without options" do
       it "returns an HTTP client" do
-        expect(client.connection).to be_a(HTTP::Client)
+        expect(client.connection).to respond_to(:request)
       end
     end
 
@@ -61,7 +61,7 @@ RSpec.describe OmniAI::Google::Client do
       it "returns an HTTP client" do
         allow(credentials).to receive(:fetch_access_token!)
         allow(credentials).to receive(:access_token) { SecureRandom.alphanumeric }
-        expect(client.connection).to be_a(HTTP::Client)
+        expect(client.connection).to respond_to(:request)
         expect(credentials).to have_received(:fetch_access_token!)
         expect(credentials).to have_received(:access_token)
       end
