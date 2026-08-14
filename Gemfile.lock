@@ -177,7 +177,7 @@ GEM
       addressable (~> 2.8)
       faraday (>= 0.17.5, < 3.a)
       jwt (>= 1.5, < 4.0)
-    simplecov (1.0.3)
+    simplecov (1.1.0)
     stringio (3.2.0)
     trailblazer-option (0.1.2)
     tsort (0.2.0)
