@@ -23,11 +23,13 @@ module OmniAI
         GEMINI_2_5_FLASH = "gemini-2.5-flash"
         GEMINI_3_FLASH = "gemini-3-flash-preview"
         GEMINI_3_5_FLASH = "gemini-3.5-flash"
+        GEMINI_3_6_FLASH = "gemini-3.6-flash"
+        GEMINI_3_7_FLASH = "gemini-3.7-flash"
         GEMINI_PRO = GEMINI_3_1_PRO
-        GEMINI_FLASH = GEMINI_3_5_FLASH
+        GEMINI_FLASH = GEMINI_3_7_FLASH
       end
 
-      DEFAULT_MODEL = Model::GEMINI_3_5_FLASH
+      DEFAULT_MODEL = Model::GEMINI_FLASH
 
       module ResponseMimeType
         JSON = "application/json"
