@@ -3,6 +3,16 @@
 RSpec.describe OmniAI::Google::Chat do
   let(:client) { OmniAI::Google::Client.new }
 
+  describe "DEFAULT_MODEL" do
+    it "is gemini-3.7-flash" do
+      expect(described_class::DEFAULT_MODEL).to eq("gemini-3.7-flash")
+    end
+
+    it "tracks the GEMINI_FLASH alias" do
+      expect(described_class::DEFAULT_MODEL).to eq(described_class::Model::GEMINI_FLASH)
+    end
+  end
+
   describe ".process!" do
     subject(:completion) { described_class.process!(prompt, client:, model:) }
 
