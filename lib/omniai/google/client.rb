@@ -39,7 +39,7 @@ module OmniAI
         credentials: OmniAI::Google.config.credentials,
         logger: OmniAI::Google.config.logger,
         host: OmniAI::Google.config.host,
-        version: OmniAI::Google.config.version,
+        version: nil,
         timeout: OmniAI::Google.config.timeout
       )
         if api_key.nil? && credentials.nil?
@@ -51,7 +51,7 @@ module OmniAI
         @project_id = project_id
         @location_id = location_id
         @credentials = Credentials.parse(credentials)
-        @version = version
+        @version = version || default_version
       end
 
       # @raise [OmniAI::Error]
@@ -127,6 +127,19 @@ module OmniAI
       end
 
     private
+
+      # Vertex AI serves `v1`; the Gemini API serves `v1beta`. `OmniAI::Google.config.version` derives from the
+      # *config's* host, not this client's, so a client constructed with a Vertex host but an otherwise default
+      # config inherited `v1beta` and produced `/v1beta/projects/.../locations/...`, which 404s against every
+      # regional endpoint.
+      #
+      # Only the Vertex case is derived from this client's host. Any other custom host — a proxy or gateway in
+      # front of the Gemini API — keeps deferring to the config, so those callers are unaffected.
+      #
+      # @return [String]
+      def default_version
+        vertex? ? Config::Version::STABLE : OmniAI::Google.config.version
+      end
 
       # @return [String] e.g. "Bearer ..."
       def auth

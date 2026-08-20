@@ -47,6 +47,53 @@ RSpec.describe OmniAI::Google::Client do
     end
   end
 
+  describe "#version" do
+    context "with the default Gemini API host" do
+      it "is the beta version" do
+        expect(described_class.new(api_key: "fake").version).to eq(OmniAI::Google::Config::Version::BETA)
+      end
+    end
+
+    context "with a Vertex host" do
+      # `OmniAI::Google.config.version` derives from the config's host, not the client's, so a client built with a
+      # Vertex host used to inherit `v1beta` and 404 against every regional endpoint.
+      it "is the stable version" do
+        client = described_class.new(api_key: "fake", host: "https://us-central1-aiplatform.googleapis.com")
+        expect(client.version).to eq(OmniAI::Google::Config::Version::STABLE)
+      end
+
+      it "builds a v1 path" do
+        client = described_class.new(
+          api_key: "fake",
+          host: "https://us-central1-aiplatform.googleapis.com",
+          project_id: "manhattan",
+          location_id: "us-central1"
+        )
+        expect(client.path).to eq("/v1/projects/manhattan/locations/us-central1/publishers/google")
+      end
+    end
+
+    context "with a custom non-Vertex host" do
+      # A proxy or gateway in front of the Gemini API must keep deferring to the config, so this fix cannot
+      # silently move those callers off the version they were using.
+      it "defers to the configured version" do
+        client = described_class.new(api_key: "fake", host: "https://gateway.example.com")
+        expect(client.version).to eq(OmniAI::Google.config.version)
+      end
+    end
+
+    context "with an explicit version" do
+      it "is respected" do
+        client = described_class.new(
+          api_key: "fake",
+          host: "https://us-central1-aiplatform.googleapis.com",
+          version: "v1beta1"
+        )
+        expect(client.version).to eq("v1beta1")
+      end
+    end
+  end
+
   describe "#connection" do
     context "without options" do
       it "returns an HTTP client" do
