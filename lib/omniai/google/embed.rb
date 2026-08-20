@@ -40,6 +40,13 @@ module OmniAI
         [data["embedding"]["values"]]
       end
 
+      # Always returns a Usage, never nil — callers rely on `response.usage` being present here without a nil check.
+      #
+      # This deliberately differs from the chat-side `UsageSerializer`, which returns nil when the payload carries
+      # no token counts at all (a truncated Gemini stream still sends a `usageMetadata` containing only
+      # `trafficType`). Embeddings have no streaming path and so no equivalent partial payload, so there is nothing
+      # to distinguish. Do not make this nil-safe "for consistency" with chat: it would turn an unguarded
+      # `response.usage.total_tokens` in a consumer into a NoMethodError.
       USAGE_METADATA_DESERIALIZER = proc do |data, *|
         prompt_tokens = data.dig("usageMetadata", "promptTokenCount")
         total_tokens = data.dig("usageMetadata", "totalTokenCount")
