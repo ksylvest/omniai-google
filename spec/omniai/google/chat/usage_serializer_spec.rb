@@ -72,12 +72,23 @@ RSpec.describe OmniAI::Google::Chat::UsageSerializer do
     end
 
     context "without any token counts" do
-      # A truncated stream assembles a usageMetadata carrying only `trafficType`.
+      # Gemini sends a usageMetadata on every chunk carrying only `trafficType`, and populates the counts solely on
+      # the terminal chunk. A stream that dies before that chunk assembles this.
       let(:data) { { "trafficType" => "ON_DEMAND" } }
 
-      it "reports no output rather than zero output" do
-        expect(deserialize.output_tokens).to be_nil
+      it "reports no usage at all, rather than a Usage whose every field is nil" do
+        expect(deserialize).to be_nil
       end
+    end
+
+    context "with a single reported count of zero" do
+      let(:data) { { "candidatesTokenCount" => 0, "trafficType" => "ON_DEMAND" } }
+
+      it "builds a Usage, because a reported zero is a count" do
+        expect(deserialize).to be_a(OmniAI::Chat::Usage)
+      end
+
+      it { expect(deserialize.output_tokens).to be(0) }
     end
   end
 
