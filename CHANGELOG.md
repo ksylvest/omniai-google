@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.13.0
+
+### Fixed
+
+- A client constructed with Vertex arguments now resolves the correct API version. `Client#initialize` defaulted `version:` to `OmniAI::Google.config.version`, which derives from the *config's* host rather than the client's, so a Vertex client built from constructor arguments inherited `v1beta` and produced `/v1beta/projects/.../locations/...` — a path that 404s against every regional Vertex endpoint. Callers had to pass `version: "v1"` explicitly for constructor-configured Vertex to work at all.
+
+  Only the Vertex case is derived from the client's own host, via the existing `vertex?` predicate. Any other custom host — a proxy or gateway in front of the Gemini API — continues to defer to the configured version, so those callers are not silently moved off the version they were using. An explicit `version:` still wins in all cases.
+
+  Note for anyone hitting the same 404: the regional host must also match the region in the path (`https://us-central1-aiplatform.googleapis.com` with `locations/us-central1`). That is deliberately not derived, because `locations/global` against the global host is a valid combination.
+
 ## 3.12.0
 
 ### Changed
