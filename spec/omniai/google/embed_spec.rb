@@ -114,7 +114,7 @@ RSpec.describe OmniAI::Google::Embed do
         let(:model) { described_class::Model::GEMINI_EMBEDDING_001 }
 
         before do
-          stub_request(:post, "https://us-central1-aiplatform.googleapis.com//v1beta/projects/test-project/locations/us-central1/publishers/google/models/#{model}:predict")
+          stub_request(:post, "https://us-central1-aiplatform.googleapis.com//v1/projects/test-project/locations/us-central1/publishers/google/models/#{model}:predict")
             .with(body: {
               instances: [{ content: text }],
             })
@@ -130,7 +130,7 @@ RSpec.describe OmniAI::Google::Embed do
         let(:model) { described_class::Model::GEMINI_EMBEDDING_2_PREVIEW }
 
         before do
-          stub_request(:post, "https://us-central1-aiplatform.googleapis.com//v1beta/projects/test-project/locations/us-central1/publishers/google/models/#{model}:embedContent")
+          stub_request(:post, "https://us-central1-aiplatform.googleapis.com//v1/projects/test-project/locations/us-central1/publishers/google/models/#{model}:embedContent")
             .with(body: {
               content: { parts: [{ text: }] },
             })
@@ -149,7 +149,7 @@ RSpec.describe OmniAI::Google::Embed do
           subject(:process!) { described_class.process!(text, client:, model:, task_type: "RETRIEVAL_QUERY") }
 
           before do
-            stub_request(:post, "https://us-central1-aiplatform.googleapis.com//v1beta/projects/test-project/locations/us-central1/publishers/google/models/#{model}:embedContent")
+            stub_request(:post, "https://us-central1-aiplatform.googleapis.com//v1/projects/test-project/locations/us-central1/publishers/google/models/#{model}:embedContent")
               .with(body: {
                 content: { parts: [{ text: }] },
                 taskType: "RETRIEVAL_QUERY",
