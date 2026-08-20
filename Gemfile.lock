@@ -1,11 +1,11 @@
 PATH
   remote: .
   specs:
-    omniai-google (3.11.0)
+    omniai-google (3.12.0)
       event_stream_parser
       google-cloud-storage
       googleauth
-      omniai (~> 3.7)
+      omniai (~> 3.8)
       openssl
       zeitwerk
 
@@ -97,7 +97,7 @@ GEM
     multi_json (1.21.1)
     net-http (0.9.1)
       uri (>= 0.11.1)
-    omniai (3.7.1)
+    omniai (3.8.0)
       base64
       event_stream_parser
       http (>= 5, < 7)
