@@ -10,7 +10,11 @@
 
   The reasoning subset is available as `Usage#thinking_tokens`, and the raw `thoughtsTokenCount` remains reachable verbatim on `response.data`. Requires omniai >= 3.8.
 
-  This also restores an invariant the gem previously broke: `totalTokenCount` always included thinking, so `input_tokens + output_tokens` did not equal `total_tokens` on any thinking response. It now does.
+  This also restores an invariant the gem previously broke. On responses whose `usageMetadata` reports only `promptTokenCount`, `candidatesTokenCount` and `thoughtsTokenCount`, `totalTokenCount` is the sum of the three — so `input_tokens + output_tokens` now equals `total_tokens`, where before it could not. Verified live against Vertex on both the streaming and non-streaming paths. Note the scope: `totalTokenCount` also carries buckets this serializer does not read, such as `toolUsePromptTokenCount` on tool-use responses, and the invariant is not claimed for those.
+
+- `UsageSerializer.deserialize` returns `nil` when the payload carries no token counts at all, so `response.usage` can now be `nil` where it previously was a `Usage` with every field `nil`. Gemini sends a `usageMetadata` on every streamed chunk carrying only `trafficType` and populates the counts solely on the terminal chunk, so a stream that ends early assembles a payload whose key is present but whose counts never arrived. Presence of the key is not presence of usage.
+
+  This does not introduce a new class of `nil`: `response.usage` is already `nil` whenever `usageMetadata` is absent entirely, so consumers that work today already nil-check. It makes an existing `nil` more frequent — and for a billing number a loud `nil` is better than an all-`nil` `Usage` that arithmetic silently turns into zero. The test is strictly "no count present", never "counts are falsy"; a reported `0` is a count and still builds a `Usage`.
 
 ### Fixed
 

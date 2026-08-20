@@ -15,7 +15,10 @@ module OmniAI
         def self.serialize(usage, *)
           thinking_tokens = usage.thinking_tokens
           candidates_tokens = usage.output_tokens
-          candidates_tokens -= thinking_tokens if candidates_tokens && thinking_tokens
+          # `thinking_tokens` is a subset of `output_tokens`, so this cannot go negative for any Usage this gem
+          # builds. Clamp anyway: a hand-constructed Usage that violates the subset invariant should not produce a
+          # negative token count on the wire.
+          candidates_tokens = [candidates_tokens - thinking_tokens, 0].max if candidates_tokens && thinking_tokens
 
           data = {
             promptTokenCount: usage.input_tokens,
@@ -27,13 +30,22 @@ module OmniAI
           data
         end
 
+        # Returns `nil` when the payload carries no token counts at all. A truncated stream still assembles a
+        # `usageMetadata` — Gemini sends one on every chunk, carrying only `trafficType` until the terminal chunk —
+        # so the presence of the key is not the presence of usage. Building a Usage from it would report every
+        # count as `nil`, which arithmetic downstream silently turns into zero.
+        #
+        # The test is strictly "no count is present", never "the counts are falsy": a reported `0` is a count.
+        #
         # @param data [Hash]
-        # @return [OmniAI::Chat::Usage]
+        # @return [OmniAI::Chat::Usage, nil]
         def self.deserialize(data, *)
           input_tokens = data["promptTokenCount"]
           candidates_tokens = data["candidatesTokenCount"]
           thinking_tokens = data["thoughtsTokenCount"]
           total_tokens = data["totalTokenCount"]
+
+          return if [input_tokens, candidates_tokens, thinking_tokens, total_tokens].all?(&:nil?)
 
           output_tokens = (candidates_tokens || 0) + (thinking_tokens || 0) if candidates_tokens || thinking_tokens
 
