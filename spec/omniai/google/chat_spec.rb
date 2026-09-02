@@ -4,8 +4,8 @@ RSpec.describe OmniAI::Google::Chat do
   let(:client) { OmniAI::Google::Client.new }
 
   describe "DEFAULT_MODEL" do
-    it "is gemini-3.7-flash" do
-      expect(described_class::DEFAULT_MODEL).to eq("gemini-3.7-flash")
+    it "is gemini-3.8-flash" do
+      expect(described_class::DEFAULT_MODEL).to eq("gemini-3.8-flash")
     end
 
     it "tracks the GEMINI_FLASH alias" do
