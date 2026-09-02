@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.14.0
+
+### Added
+
+- `Model::GEMINI_3_8_FLASH` (`"gemini-3.8-flash"`), GA upstream as of 2026-09-02. Verified live against Vertex: the id is listed in the publisher catalog in both `global` and `us-central1`, and a `generateContent` round-trip through this gem returns text and usage. There is no `-preview` suffix on this one, unlike the `gemini-3-flash-preview` / `gemini-3.1-pro-preview` ids.
+
+### Changed
+
+- **`GEMINI_FLASH` now points at `GEMINI_3_8_FLASH` (was `GEMINI_3_7_FLASH`), so `DEFAULT_MODEL` moves to `gemini-3.8-flash`.** `DEFAULT_MODEL` is defined as `Model::GEMINI_FLASH`, so any caller that omits `model:` moves with it. Pin `Model::GEMINI_3_7_FLASH` explicitly to stay on the previous default.
+
+  Note for anyone tracking spend: 3.8 Flash is a thinking model like its predecessors, and since 3.12.0 `Usage#output_tokens` includes `thoughtsTokenCount`. On the short live probe used to verify this release, 3.8 spent noticeably more thinking tokens than 3.7 on an identical prompt (106 vs 63 on a one-word answer). That is a single sample and not a benchmark, but the default model change can move output-token cost without any change in prompt or response length.
+
 ## 3.13.0
 
 ### Fixed
