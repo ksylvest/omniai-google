@@ -8,9 +8,23 @@
 
 ### Changed
 
-- **`GEMINI_FLASH` now points at `GEMINI_3_8_FLASH` (was `GEMINI_3_7_FLASH`), so `DEFAULT_MODEL` moves to `gemini-3.8-flash`.** `DEFAULT_MODEL` is defined as `Model::GEMINI_FLASH`, so any caller that omits `model:` moves with it. Pin `Model::GEMINI_3_7_FLASH` explicitly to stay on the previous default.
+- **`GEMINI_FLASH` now points at `GEMINI_3_8_FLASH` (was `GEMINI_3_7_FLASH`), so `DEFAULT_MODEL` moves to `gemini-3.8-flash`.**
 
-  Note for anyone tracking spend: 3.8 Flash is a thinking model like its predecessors, and since 3.12.0 `Usage#output_tokens` includes `thoughtsTokenCount`. On the short live probe used to verify this release, 3.8 spent noticeably more thinking tokens than 3.7 on an identical prompt (106 vs 63 on a one-word answer). That is a single sample and not a benchmark, but the default model change can move output-token cost without any change in prompt or response length.
+  This moves **two** kinds of caller, and the second is the one that surprises people:
+
+  1. Anyone who omits `model:` — `DEFAULT_MODEL` is defined as `Model::GEMINI_FLASH`.
+  2. **Anyone who passes `model: OmniAI::Google::Chat::Model::GEMINI_FLASH` explicitly.** The alias is not a pin. Naming it in your code reads like a choice and behaves like a subscription: it re-points on every minor release that floats it, including this one.
+
+  Pin `Model::GEMINI_3_7_FLASH` — or any versioned constant — to stay where you are. If you resolve models through the alias anywhere that matters, this is the release to switch to an explicit constant.
+
+  **If you keep a per-model pricing or cost table, add a `gemini-3.8-flash` row before you upgrade.** A float onto a model your table does not know about does not raise — it yields a nil price and renders as unpriced, so the first symptom is a billing report that looks wrong rather than an error anyone can catch.
+
+  **Expect the same prompt to cost more.** 3.8 Flash is a thinking model, and since 3.12.0 `Usage#output_tokens` includes `thoughtsTokenCount`. Two independent measurements, at identical list rates:
+
+  - On a one-word answer, 3.8 spent 106 thinking tokens against 3.7's 63 (a third run: 84). One prompt, not a benchmark.
+  - On a production page-extraction workload, **3.8 at default cost 1.43x per page versus 3.7**, with thinking accounting for roughly 85% of output tokens.
+
+  List price per token is unchanged from 3.7's introductory rate, so this is entirely a token-volume effect. Budget for it before you float, particularly on high-volume per-page work where a 1.43x on output is the whole margin.
 
 ## 3.13.0
 
