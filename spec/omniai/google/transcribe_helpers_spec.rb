@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# rubocop:disable RSpec/SubjectStub, RSpec/VerifiedDoubles
+# rubocop:disable-next RSpec/SubjectStub, RSpec/VerifiedDoubles
 RSpec.describe OmniAI::Google::TranscribeHelpers do
   subject(:transcribe) { transcribe_class.new("test.mp3", client:, model: "latest_short") }
 
@@ -771,4 +771,3 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
     end
   end
 end
-# rubocop:enable RSpec/SubjectStub, RSpec/VerifiedDoubles
