@@ -45,10 +45,31 @@ module OmniAI
           raise StreamError, "the stream carried an error: #{error_summary(error)}" if error
 
           candidates = @data["candidates"] || []
-          return if candidates.any? && candidates.all? { |candidate| candidate["finishReason"] }
+          incomplete = candidates.select { |candidate| incomplete?(candidate) }
+          return unless candidates.empty? || incomplete.any?
 
           raise IncompleteStreamError,
-            "the stream ended without a finish reason: #{candidates_summary(candidates)}"
+            "the stream ended without a finish reason: #{candidates_summary(incomplete)}"
+        end
+
+        # A candidate is incomplete only when it reported no finish reason AND produced nothing
+        # but thinking.
+        #
+        # "No finishReason" alone is NOT sufficient, and assuming it was would have been worse
+        # than the bug. Measured in production, same conversation and hour and model as the
+        # failures above: a turn delivered a complete 33,732-character answer with no finish
+        # reason at all. Raising on that would discard the one turn that worked and spend the
+        # retry budget re-running it.
+        #
+        # Text or a function call means the generation produced something; the caller gets it
+        # with finish_reason nil and decides. A nil finish reason is not invented here -- an
+        # unterminated-but-substantive stream is a fact about the response, and hiding it
+        # behind a fabricated STOP would be the same laundering this guard exists to stop.
+        def incomplete?(candidate)
+          return false if candidate["finishReason"]
+
+          parts = candidate.dig("content", "parts") || []
+          parts.none? { |part| part["functionCall"] || (part["text"] && !part["thought"]) }
         end
 
         # @param error [Hash]

@@ -681,5 +681,43 @@ RSpec.describe OmniAI::Google::Chat::Stream do
         expect { stream! }.not_to raise_error
       end
     end
+
+    context "when the stream ends without a finish reason but delivered an answer" do
+      let(:chunks) do
+        [
+          { candidates: [{ content: { role: "model", parts: [{ text: "a complete answer" }] }, index: 0 }] },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "returns it rather than discarding a turn that worked" do
+        # Measured in production, same conversation and hour and model as the failures above:
+        # a complete 33,732-character answer arrived with no finish reason. Raising on "no
+        # finishReason" alone would throw away the one turn that worked and spend the retry
+        # budget re-running it.
+        expect { stream! }.not_to raise_error
+      end
+
+      it "leaves finish_reason nil rather than inventing one" do
+        response = OmniAI::Chat::Response.deserialize(stream!, context: OmniAI::Google::Chat::CONTEXT)
+        expect(response.text).to eql("a complete answer")
+        expect(response.choices.first.finish_reason).to be_nil
+      end
+    end
+
+    context "when the stream ends without a finish reason but made a tool call" do
+      let(:chunks) do
+        [
+          {
+            candidates: [
+              { content: { role: "model", parts: [{ functionCall: { name: "temperature", args: {} } }] }, index: 0 },
+            ],
+          },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "returns it, because the generation produced something" do
+        expect { stream! }.not_to raise_error
+      end
+    end
   end
 end
