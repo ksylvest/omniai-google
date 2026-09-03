@@ -18,10 +18,61 @@ module OmniAI
             end
           end
 
+          validate!
           @data
         end
 
       protected
+
+        # A stream that stopped early must not be handed back as an answer.
+        #
+        # Two ways it happens, both observed in production and both silent before this:
+        #
+        # 1. Google reports a failure that occurs AFTER the 200 by putting an `error` object in
+        #    the stream. `process_data!` copies every non-candidate key into @data, so that
+        #    error landed in @data["error"] and the caller received an empty, SUCCESSFUL
+        #    response for an upstream outage. Reproduced: a 503 UNAVAILABLE arriving mid-stream
+        #    yielded text="" with finish_reason=nil and no exception anywhere.
+        #
+        # 2. The stream closes cleanly with no terminal chunk, so no candidate ever reports a
+        #    `finishReason`. Seen as thought-only responses -- every part `thought: true`, no
+        #    answer text -- which read downstream as "the model returned nothing" rather than
+        #    "the generation was cut off".
+        #
+        # This is not transport truncation; http.rb already raises on a truncated framed body.
+        def validate!
+          error = @data["error"]
+          raise StreamError, "the stream carried an error: #{error_summary(error)}" if error
+
+          candidates = @data["candidates"] || []
+          return if candidates.any? && candidates.all? { |candidate| candidate["finishReason"] }
+
+          raise IncompleteStreamError,
+            "the stream ended without a finish reason: #{candidates_summary(candidates)}"
+        end
+
+        # @param error [Hash]
+        # @return [String]
+        def error_summary(error)
+          "code=#{error['code'].inspect} status=#{error['status'].inspect} " \
+            "message=#{error['message'].inspect}"
+        end
+
+        # STRUCTURE ONLY -- counts and flags, never part text. Consumers log these messages and
+        # the text may be PHI.
+        #
+        # @param candidates [Array<Hash>]
+        # @return [String]
+        def candidates_summary(candidates)
+          return "candidates=0" if candidates.empty?
+
+          candidates.map.with_index do |candidate, index|
+            parts = candidate.dig("content", "parts") || []
+            "candidate=#{index} parts=#{parts.size} " \
+              "thought_parts=#{parts.count { |part| part['thought'] }} " \
+              "finish_reason=#{candidate['finishReason'].inspect}"
+          end.join("; ")
+        end
 
         # @yield [delta]
         # @yieldparam delta [OmniAI::Chat::Delta]

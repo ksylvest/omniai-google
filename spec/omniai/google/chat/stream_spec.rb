@@ -44,6 +44,10 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
+          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
+          {
+            candidates: [{ finishReason: "STOP", index: 0 }],
+          },
         ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
       end
 
@@ -60,6 +64,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                 ],
               },
               "index" => 0,
+              "finishReason" => "STOP",
             },
           ],
         })
@@ -122,6 +127,10 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
+          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
+          {
+            candidates: [{ finishReason: "STOP", index: 0 }],
+          },
         ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
       end
 
@@ -137,6 +146,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                 ],
               },
               "index" => 0,
+              "finishReason" => "STOP",
             },
           ],
         })
@@ -201,6 +211,10 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
+          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
+          {
+            candidates: [{ finishReason: "STOP", index: 0 }],
+          },
         ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
       end
 
@@ -232,6 +246,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                 ],
               },
               "index" => 0,
+              "finishReason" => "STOP",
             },
           ],
         })
@@ -422,6 +437,10 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
+          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
+          {
+            candidates: [{ finishReason: "STOP", index: 0 }],
+          },
         ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
       end
 
@@ -442,6 +461,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                 ],
               },
               "index" => 0,
+              "finishReason" => "STOP",
             },
           ],
         })
@@ -534,6 +554,10 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
+          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
+          {
+            candidates: [{ finishReason: "STOP", index: 0 }],
+          },
         ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
       end
 
@@ -568,6 +592,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
                 ],
               },
               "index" => 0,
+              "finishReason" => "STOP",
             },
           ],
         })
@@ -580,6 +605,80 @@ RSpec.describe OmniAI::Google::Chat::Stream do
           " ",
           "World",
         ])
+      end
+    end
+
+    context "when the stream ends without a finish reason" do
+      let(:chunks) do
+        [
+          {
+            candidates: [
+              { content: { role: "model", parts: [{ text: "hmm", thought: true }] }, index: 0 },
+            ],
+          },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "raises rather than returning the fragment as an answer" do
+        # Observed in production: 129 events in an hour, every part thought-only, no
+        # finishReason. Before this the caller got an empty, successful response.
+        expect { stream! }.to raise_error(OmniAI::Google::IncompleteStreamError)
+      end
+
+      it "reports the structure of what did arrive" do
+        expect { stream! }.to raise_error(/candidate=0 parts=1 thought_parts=1 finish_reason=nil/)
+      end
+
+      it "does not put part text in the message, which may be PHI" do
+        expect { stream! }.to(raise_error { |error| expect(error.message).not_to include("hmm") })
+      end
+
+      it "is an OmniAI::Error that carries no response, so callers retry it" do
+        expect { stream! }.to raise_error(OmniAI::Error) { |error|
+          expect(error).not_to respond_to(:response)
+        }
+      end
+    end
+
+    context "when the stream carries no candidates at all" do
+      let(:chunks) { ["data: #{JSON.generate({ usageMetadata: { promptTokenCount: 7 } })}\n\n"] }
+
+      it "raises rather than returning an empty success" do
+        expect { stream! }.to raise_error(OmniAI::Google::IncompleteStreamError, /candidates=0/)
+      end
+    end
+
+    context "when the stream carries an error object after the 200" do
+      let(:chunks) do
+        [
+          { candidates: [{ content: { role: "model", parts: [{ text: "par", thought: true }] }, index: 0 }] },
+          { error: { code: 503, status: "UNAVAILABLE", message: "overloaded" } },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "raises instead of swallowing it into the aggregate" do
+        # process_data! copies every non-candidate key into @data, so this landed in
+        # @data["error"] and the caller received an empty SUCCESSFUL response for an outage.
+        expect { stream! }.to raise_error(OmniAI::Google::StreamError)
+      end
+
+      it "surfaces Google's code, status and message" do
+        expect { stream! }
+          .to raise_error(/code=503 status="UNAVAILABLE" message="overloaded"/)
+      end
+    end
+
+    context "when the stream finishes for a reason the caller must decide about" do
+      let(:chunks) do
+        [
+          { candidates: [{ content: { role: "model", parts: [{ text: "Otta" }] }, index: 0 }] },
+          { candidates: [{ finishReason: "MAX_TOKENS", index: 0 }] },
+        ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "does not raise, because the generation reported how it ended" do
+        # SAFETY and MAX_TOKENS are answers about the generation, not failures of the stream.
+        expect { stream! }.not_to raise_error
       end
     end
   end
