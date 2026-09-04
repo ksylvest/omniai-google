@@ -655,8 +655,8 @@ RSpec.describe OmniAI::Google::Chat::Stream do
         expect { stream! }.to raise_error(OmniAI::Google::StreamError)
       end
 
-      it "exposes Google's message on #detail, off the exception message" do
-        expect { stream! }.to(raise_error { |error| expect(error.detail).to eql("overloaded") })
+      it "exposes Google's message on #provider_message, off the exception message" do
+        expect { stream! }.to(raise_error { |error| expect(error.provider_message).to eql("overloaded") })
       end
 
       it "surfaces Google's code and status, but not its message" do

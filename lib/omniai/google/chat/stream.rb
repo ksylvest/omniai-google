@@ -30,7 +30,7 @@ module OmniAI
           error = @data["error"]
           if error
             raise StreamError.new("the stream carried an error: #{error_summary(error)}",
-              detail: error["message"])
+              provider_message: error["message"])
           end
 
           # No candidates at all (a usageMetadata-only stream) is incomplete too.

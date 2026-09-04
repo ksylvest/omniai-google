@@ -1,17 +1,17 @@
 # Changelog
 
-## 3.14.1
+## 3.15.0
 
 ### Fixed
 
 - **A streamed generation that never completes now raises instead of returning the fragment as an answer.** Two cases, both seen in production on `gemini-3.7-flash`:
 
-  - A top-level `error` object arriving after the 200 was copied into the aggregate and returned as an empty, *successful* response. Now raises `OmniAI::Google::StreamError` with Google's code and status; its `#detail` carries Google's own message.
+  - A top-level `error` object arriving after the 200 was copied into the aggregate and returned as an empty, *successful* response. Now raises `OmniAI::Google::StreamError` with Google's code and status; its `#provider_message` carries Google's own message.
   - A stream ending with no `finishReason` **and** nothing but thinking now raises `OmniAI::Google::IncompleteStreamError`. Captured shape: one candidate, one part with `thought: true`, no `finishReason` key, no answer text.
 
   A missing `finishReason` alone is deliberately not enough: it would also condemn an unterminated stream that did deliver an answer, and discarding a usable answer in order to retry is the more expensive mistake. So a stream carrying text or a tool call still returns, with `finish_reason` left `nil` rather than fabricated. Check `finish_reason.nil?` with text present to alert on it.
 
-  Neither error carries a `#response` (the request returned 200), so consumers that branch on that to decide retries will retry both. `IncompleteStreamError < StreamError`. Exception messages carry counts, flags, code and status only — never part text or Google's error message, both of which can echo request content. Google's message is on `StreamError#detail` for callers that want it.
+  Neither error carries a `#response` (the request returned 200), so consumers that branch on that to decide retries will retry both. `IncompleteStreamError < StreamError`. Exception messages carry counts, flags, code and status only — never part text or Google's error message, both of which can echo request content. Google's message is on `StreamError#provider_message` for callers that want it.
 
   `MAX_TOKENS` and `SAFETY` are unchanged.
 
