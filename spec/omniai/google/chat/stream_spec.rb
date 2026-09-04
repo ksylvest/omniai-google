@@ -655,6 +655,10 @@ RSpec.describe OmniAI::Google::Chat::Stream do
         expect { stream! }.to raise_error(OmniAI::Google::StreamError)
       end
 
+      it "exposes Google's message on #detail, off the exception message" do
+        expect { stream! }.to(raise_error { |error| expect(error.detail).to eql("overloaded") })
+      end
+
       it "surfaces Google's code and status, but not its message" do
         # The message can echo request content back and consumers log these.
         expect { stream! }.to raise_error(/code=503 status="UNAVAILABLE"/) { |error|

@@ -28,8 +28,12 @@ module OmniAI
         # `process_data!` otherwise copies into @data and returns as an empty success.
         def validate!
           error = @data["error"]
-          raise StreamError, "the stream carried an error: #{error_summary(error)}" if error
+          if error
+            raise StreamError.new("the stream carried an error: #{error_summary(error)}",
+              detail: error["message"])
+          end
 
+          # No candidates at all (a usageMetadata-only stream) is incomplete too.
           candidates = @data["candidates"] || []
           incomplete = candidates.select { |candidate| incomplete?(candidate) }
           return unless candidates.empty? || incomplete.any?
