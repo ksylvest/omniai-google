@@ -4,23 +4,22 @@
 
 ### Fixed
 
-- **A streamed generation that never completes now raises instead of returning the fragment as an answer.** Two ways it happened, both observed in production on `gemini-3.7-flash` and both silent:
+- **A streamed generation that never completes now raises instead of returning the fragment as an answer.** Two cases, both seen in production on `gemini-3.7-flash`:
 
-  1. Google reports a failure occurring *after* the 200 by putting an `error` object in the stream. `Stream#process_data!` copies every non-candidate key into the aggregate, so that error landed in `data["error"]` and the caller received an empty, **successful** response for an upstream outage. Reproduced: a `503 UNAVAILABLE` arriving mid-stream yielded `text == ""`, `finish_reason == nil`, and no exception anywhere. Now raises `OmniAI::Google::StreamError` carrying Google's code, status and message.
+  - A top-level `error` object arriving after the 200 was copied into the aggregate and returned as an empty, *successful* response. Now raises `OmniAI::Google::StreamError` with Google's code, status and message.
+  - A stream ending with no `finishReason` **and** nothing but thinking now raises `OmniAI::Google::IncompleteStreamError`.
 
-  2. The stream closes cleanly with no terminal chunk **and the candidate produced nothing but thinking** — every part `thought: true`, no answer text, no function call. Downstream this read as "the model returned nothing" rather than "the generation was cut off". Now raises `OmniAI::Google::IncompleteStreamError`.
+- **A blocked prompt raises `OmniAI::Google::PromptBlockedError`** (`promptFeedback.blockReason`). Gemini returns a prompt-level refusal as zero candidates, which would otherwise look incomplete. It is terminal and deterministic, so consumers that retry on `StreamError` must rescue this first; it exposes `#reason`.
 
-  **A missing `finishReason` on its own is not enough to raise, and treating it as enough would be worse than the bug.** Measured in production, in the same conversation and hour and model as the failures above: a turn delivered a complete 33,732-character answer with no finish reason at all. Raising on that would discard the one turn that worked and spend the retry budget re-running it. So a stream that ends unterminated but carries text or a tool call is returned as before, with `finish_reason` left `nil` — not fabricated into a `STOP`, since an unterminated-but-substantive stream is a fact about the response and hiding it would be the same laundering this guard exists to stop. Callers who want to alert on it can check `finish_reason.nil?` with text present.
+  A missing `finishReason` alone is not enough — a complete 33,732-character answer arrived without one — so an unterminated stream carrying text or a tool call still returns, with `finish_reason` left `nil` rather than fabricated. Check `finish_reason.nil?` with text present to alert on it.
 
-  Neither error carries a `#response`, deliberately: the request succeeded with a 200 and the failure arrived inside the stream, so there is no HTTP response to attach. It also matters downstream — consumers commonly branch on whether an error exposes a response to separate "the server answered and said no" (do not retry) from "the call did not complete" (retry). A stream that stopped early is the second kind and is worth retrying. `IncompleteStreamError < StreamError`, so rescue `StreamError` to catch both.
+  Neither error carries a `#response` (the request returned 200), so consumers that branch on that to decide retries will retry both. `IncompleteStreamError < StreamError`. Messages carry counts, flags, code and status only — never part text or Google's error message, both of which can echo request content.
 
-  Error messages carry **structure only** — candidate count, part count, thought-part count, finish reasons seen — never part text, which may be sensitive in the documents these streams carry.
-
-  Unchanged: `MAX_TOKENS` and `SAFETY` still return normally. Those report how a generation ended and are the caller's decision; this guards only streams that never reported at all. This is not transport truncation, which `http.rb` already raises on.
+  `MAX_TOKENS` and `SAFETY` are unchanged.
 
 ### Note for anyone upgrading from 3.13.x
 
-**3.14.1 carries the `GEMINI_FLASH` alias float from 3.14.0** — the alias resolves to `gemini-3.8-flash`, not `gemini-3.7-flash`. If you resolve models through the alias (including by omitting `model:`), taking this streaming fix also moves your model. Pin `Model::GEMINI_3_7_FLASH` to take the fix without the float, and see the 3.14.0 entry for the pricing-table warning that goes with it.
+**3.14.1 carries the `GEMINI_FLASH` alias float from 3.14.0** — the alias resolves to `gemini-3.8-flash`. Pin `Model::GEMINI_3_7_FLASH` to take this fix without moving models; see the 3.14.0 entry for the pricing-table warning.
 
 ## 3.14.0
 
