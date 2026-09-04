@@ -709,25 +709,21 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       end
     end
 
-    context "when the prompt itself is blocked" do
+    context "when a safety block comes back as a candidate with no parts" do
+      # Captured from Vertex (gemini-3.8-flash, safetySettings BLOCK_LOW_AND_ABOVE): a real
+      # block arrives candidate-level with finishReason SAFETY, not as promptFeedback.
       let(:chunks) do
-        [{ promptFeedback: { blockReason: "SAFETY", safetyRatings: [] } }]
+        [{ candidates: [{ content: { role: "model" }, finishReason: "SAFETY", index: 0 }] }]
           .map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
       end
 
-      it "raises a distinct error, because the block is terminal" do
-        # Zero candidates, so this would otherwise look incomplete and be retried forever.
-        expect { stream! }.to raise_error(OmniAI::Google::PromptBlockedError, /SAFETY/)
+      it "returns it, because the model reported why it stopped" do
+        expect { stream! }.not_to raise_error
       end
 
-      it "is rescuable as a StreamError" do
-        expect { stream! }.to raise_error(OmniAI::Google::StreamError)
-      end
-
-      it "is not an IncompleteStreamError" do
-        expect { stream! }.to(raise_error do |error|
-          expect(error).not_to be_a(OmniAI::Google::IncompleteStreamError)
-        end)
+      it "keeps the provider's reason" do
+        response = OmniAI::Chat::Response.deserialize(stream!, context: OmniAI::Google::Chat::CONTEXT)
+        expect(response.choices.first.finish_reason.value).to eql("SAFETY")
       end
     end
 
