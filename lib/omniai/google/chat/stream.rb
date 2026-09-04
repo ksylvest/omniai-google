@@ -24,25 +24,14 @@ module OmniAI
 
       protected
 
-        # A stream that stopped early must not be handed back as an answer.
-        #
-        # Two ways it happens, both observed in production and both silent before this:
-        #
-        # 1. Google reports a failure that occurs AFTER the 200 by putting an `error` object in
-        #    the stream. `process_data!` copies every non-candidate key into @data, so that
-        #    error landed in @data["error"] and the caller received an empty, SUCCESSFUL
-        #    response for an upstream outage. Reproduced: a 503 UNAVAILABLE arriving mid-stream
-        #    yielded text="" with finish_reason=nil and no exception anywhere.
-        #
-        # 2. The stream closes cleanly with no terminal chunk, so no candidate ever reports a
-        #    `finishReason`. Seen as thought-only responses -- every part `thought: true`, no
-        #    answer text -- which read downstream as "the model returned nothing" rather than
-        #    "the generation was cut off".
-        #
-        # This is not transport truncation; http.rb already raises on a truncated framed body.
+        # Google reports a post-200 failure as an `error` object in the stream, which
+        # `process_data!` otherwise copies into @data and returns as an empty success.
         def validate!
           error = @data["error"]
           raise StreamError, "the stream carried an error: #{error_summary(error)}" if error
+
+          blocked = @data.dig("promptFeedback", "blockReason")
+          raise PromptBlockedError, blocked if blocked
 
           candidates = @data["candidates"] || []
           incomplete = candidates.select { |candidate| incomplete?(candidate) }
@@ -52,35 +41,30 @@ module OmniAI
             "the stream ended without a finish reason: #{candidates_summary(incomplete)}"
         end
 
-        # A candidate is incomplete only when it reported no finish reason AND produced nothing
-        # but thinking.
-        #
-        # "No finishReason" alone is NOT sufficient, and assuming it was would have been worse
-        # than the bug. Measured in production, same conversation and hour and model as the
-        # failures above: a turn delivered a complete 33,732-character answer with no finish
-        # reason at all. Raising on that would discard the one turn that worked and spend the
-        # retry budget re-running it.
-        #
-        # Text or a function call means the generation produced something; the caller gets it
-        # with finish_reason nil and decides. A nil finish reason is not invented here -- an
-        # unterminated-but-substantive stream is a fact about the response, and hiding it
-        # behind a fabricated STOP would be the same laundering this guard exists to stop.
+        # No finishReason alone is not enough: a complete 33,732-character answer arrived
+        # without one in production. Only thought-only-and-empty counts as incomplete.
         def incomplete?(candidate)
           return false if candidate["finishReason"]
 
           parts = candidate.dig("content", "parts") || []
-          parts.none? { |part| part["functionCall"] || (part["text"] && !part["thought"]) }
+          parts.none? { |part| part["functionCall"] || answer_part?(part) }
         end
 
+        # "" is truthy in Ruby, so an empty text part must not count as an answer.
+        def answer_part?(part)
+          !thought_part?(part) && !part["text"].to_s.strip.empty?
+        end
+
+        # Code and status only. Google's `message` can echo request content back, and consumers
+        # log these, so it is omitted for the same reason candidates_summary omits part text.
+        #
         # @param error [Hash]
         # @return [String]
         def error_summary(error)
-          "code=#{error['code'].inspect} status=#{error['status'].inspect} " \
-            "message=#{error['message'].inspect}"
+          "code=#{error['code'].inspect} status=#{error['status'].inspect}"
         end
 
-        # STRUCTURE ONLY -- counts and flags, never part text. Consumers log these messages and
-        # the text may be PHI.
+        # Structure only: consumers log these messages and part text may be sensitive.
         #
         # @param candidates [Array<Hash>]
         # @return [String]

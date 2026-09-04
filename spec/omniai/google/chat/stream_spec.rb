@@ -44,7 +44,6 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
-          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
           {
             candidates: [{ finishReason: "STOP", index: 0 }],
           },
@@ -127,7 +126,6 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
-          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
           {
             candidates: [{ finishReason: "STOP", index: 0 }],
           },
@@ -211,7 +209,6 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
-          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
           {
             candidates: [{ finishReason: "STOP", index: 0 }],
           },
@@ -437,7 +434,6 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
-          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
           {
             candidates: [{ finishReason: "STOP", index: 0 }],
           },
@@ -554,7 +550,6 @@ RSpec.describe OmniAI::Google::Chat::Stream do
               },
             ],
           },
-          # A real Gemini stream ends with a terminal chunk carrying the finish reason.
           {
             candidates: [{ finishReason: "STOP", index: 0 }],
           },
@@ -620,8 +615,6 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       end
 
       it "raises rather than returning the fragment as an answer" do
-        # Observed in production: 129 events in an hour, every part thought-only, no
-        # finishReason. Before this the caller got an empty, successful response.
         expect { stream! }.to raise_error(OmniAI::Google::IncompleteStreamError)
       end
 
@@ -629,11 +622,11 @@ RSpec.describe OmniAI::Google::Chat::Stream do
         expect { stream! }.to raise_error(/candidate=0 parts=1 thought_parts=1 finish_reason=nil/)
       end
 
-      it "does not put part text in the message, which may be PHI" do
+      it "keeps part text out of the message" do
         expect { stream! }.to(raise_error { |error| expect(error.message).not_to include("hmm") })
       end
 
-      it "is an OmniAI::Error that carries no response, so callers retry it" do
+      it "carries no response, so callers retry it" do
         expect { stream! }.to raise_error(OmniAI::Error) { |error|
           expect(error).not_to respond_to(:response)
         }
@@ -657,14 +650,14 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       end
 
       it "raises instead of swallowing it into the aggregate" do
-        # process_data! copies every non-candidate key into @data, so this landed in
-        # @data["error"] and the caller received an empty SUCCESSFUL response for an outage.
         expect { stream! }.to raise_error(OmniAI::Google::StreamError)
       end
 
-      it "surfaces Google's code, status and message" do
-        expect { stream! }
-          .to raise_error(/code=503 status="UNAVAILABLE" message="overloaded"/)
+      it "surfaces Google's code and status, but not its message" do
+        # The message can echo request content back and consumers log these.
+        expect { stream! }.to raise_error(/code=503 status="UNAVAILABLE"/) { |error|
+          expect(error.message).not_to include("overloaded")
+        }
       end
     end
 
@@ -677,7 +670,6 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       end
 
       it "does not raise, because the generation reported how it ended" do
-        # SAFETY and MAX_TOKENS are answers about the generation, not failures of the stream.
         expect { stream! }.not_to raise_error
       end
     end
@@ -690,10 +682,7 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       end
 
       it "returns it rather than discarding a turn that worked" do
-        # Measured in production, same conversation and hour and model as the failures above:
-        # a complete 33,732-character answer arrived with no finish reason. Raising on "no
-        # finishReason" alone would throw away the one turn that worked and spend the retry
-        # budget re-running it.
+        # A complete 33,732-character answer arrived without a finishReason in production.
         expect { stream! }.not_to raise_error
       end
 
@@ -717,6 +706,39 @@ RSpec.describe OmniAI::Google::Chat::Stream do
 
       it "returns it, because the generation produced something" do
         expect { stream! }.not_to raise_error
+      end
+    end
+
+    context "when the prompt itself is blocked" do
+      let(:chunks) do
+        [{ promptFeedback: { blockReason: "SAFETY", safetyRatings: [] } }]
+          .map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "raises a distinct error, because the block is terminal" do
+        # Zero candidates, so this would otherwise look incomplete and be retried forever.
+        expect { stream! }.to raise_error(OmniAI::Google::PromptBlockedError, /SAFETY/)
+      end
+
+      it "is rescuable as a StreamError" do
+        expect { stream! }.to raise_error(OmniAI::Google::StreamError)
+      end
+
+      it "is not an IncompleteStreamError" do
+        expect { stream! }.to(raise_error do |error|
+          expect(error).not_to be_a(OmniAI::Google::IncompleteStreamError)
+        end)
+      end
+    end
+
+    context "when the only answer part is an empty string" do
+      let(:chunks) do
+        [{ candidates: [{ content: { role: "model", parts: [{ text: "" }] }, index: 0 }] }]
+          .map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
+      end
+
+      it "raises, since an empty string is not an answer" do
+        expect { stream! }.to raise_error(OmniAI::Google::IncompleteStreamError)
       end
     end
   end
