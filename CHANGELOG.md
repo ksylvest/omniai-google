@@ -17,7 +17,7 @@
 
 ### Note for anyone upgrading from 3.13.x
 
-**3.14.1 carries the `GEMINI_FLASH` alias float from 3.14.0** — the alias resolves to `gemini-3.8-flash`. Pin `Model::GEMINI_3_7_FLASH` to take this fix without moving models; see the 3.14.0 entry for the pricing-table warning.
+**3.15.0 carries the `GEMINI_FLASH` alias float from 3.14.0** — the alias resolves to `gemini-3.8-flash`. Pin `Model::GEMINI_3_7_FLASH` to take this fix without moving models; see the 3.14.0 entry for the pricing-table warning.
 
 ## 3.14.0
 
