@@ -38,8 +38,9 @@ module OmniAI
             "the stream ended without a finish reason: #{candidates_summary(incomplete)}"
         end
 
-        # No finishReason alone is not enough: a complete 33,732-character answer arrived
-        # without one in production. Only thought-only-and-empty counts as incomplete.
+        # Only thought-only-and-empty counts. A missing finishReason alone would also condemn
+        # an unterminated stream that did deliver an answer, and discarding a usable answer to
+        # retry is the more expensive mistake.
         def incomplete?(candidate)
           return false if candidate["finishReason"]
 

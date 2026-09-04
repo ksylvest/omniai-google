@@ -614,6 +614,8 @@ RSpec.describe OmniAI::Google::Chat::Stream do
         ].map { |chunk| "data: #{JSON.generate(chunk)}\n\n" }
       end
 
+      # Shape captured in production (Sentry APP-GK, 89 events on 2026-08-20, gemini-3.7-flash):
+      # one candidate, one part, thought: true, no finishReason key, no answer text.
       it "raises rather than returning the fragment as an answer" do
         expect { stream! }.to raise_error(OmniAI::Google::IncompleteStreamError)
       end
@@ -682,7 +684,6 @@ RSpec.describe OmniAI::Google::Chat::Stream do
       end
 
       it "returns it rather than discarding a turn that worked" do
-        # A complete 33,732-character answer arrived without a finishReason in production.
         expect { stream! }.not_to raise_error
       end
 
