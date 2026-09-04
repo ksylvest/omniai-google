@@ -30,9 +30,6 @@ module OmniAI
           error = @data["error"]
           raise StreamError, "the stream carried an error: #{error_summary(error)}" if error
 
-          blocked = @data.dig("promptFeedback", "blockReason")
-          raise PromptBlockedError, blocked if blocked
-
           candidates = @data["candidates"] || []
           incomplete = candidates.select { |candidate| incomplete?(candidate) }
           return unless candidates.empty? || incomplete.any?

@@ -9,8 +9,6 @@
   - A top-level `error` object arriving after the 200 was copied into the aggregate and returned as an empty, *successful* response. Now raises `OmniAI::Google::StreamError` with Google's code, status and message.
   - A stream ending with no `finishReason` **and** nothing but thinking now raises `OmniAI::Google::IncompleteStreamError`.
 
-- **A blocked prompt raises `OmniAI::Google::PromptBlockedError`** (`promptFeedback.blockReason`). Gemini returns a prompt-level refusal as zero candidates, which would otherwise look incomplete. It is terminal and deterministic, so consumers that retry on `StreamError` must rescue this first; it exposes `#reason`.
-
   A missing `finishReason` alone is not enough — a complete 33,732-character answer arrived without one — so an unterminated stream carrying text or a tool call still returns, with `finish_reason` left `nil` rather than fabricated. Check `finish_reason.nil?` with text present to alert on it.
 
   Neither error carries a `#response` (the request returned 200), so consumers that branch on that to decide retries will retry both. `IncompleteStreamError < StreamError`. Messages carry counts, flags, code and status only — never part text or Google's error message, both of which can echo request content.
