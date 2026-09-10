@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.17.0
+
+### Fixed
+
+- **`Client#vertex?` now recognises Google's multi-region endpoints.** The check was `@host.include?("aiplatform.googleapis.com")`, which misses `https://aiplatform.us.rep.googleapis.com` — the `<geo>.rep` host does not contain that substring. Vertex is served from three host shapes and only two of them matched:
+
+  | Host | Before | After |
+  | --- | --- | --- |
+  | `aiplatform.googleapis.com` | vertex | vertex |
+  | `us-central1-aiplatform.googleapis.com` | vertex | vertex |
+  | `aiplatform.us.rep.googleapis.com` | **not vertex** | vertex |
+  | `generativelanguage.googleapis.com` | not vertex | not vertex |
+
+  Two things key off `vertex?`. `#default_version` picks `v1` for Vertex and otherwise defers to the config, so a client built with the multi-region host and an otherwise default config produced `/v1beta/projects/.../locations/...`, which 404s. And `Embed#endpoint` routes to `predict` / `embedContent` on Vertex and `batchEmbedContents` elsewhere, so an embedding against that host built a Gemini-API-shaped request.
+
+  The match is now against the parsed hostname rather than a substring of the raw host, so a proxy whose path or query merely mentions a Vertex host no longer counts as Vertex.
+
+### Upgrading
+
+- A host that matched only by accident is no longer Vertex: a proxy URL containing `aiplatform.googleapis.com` in its **path or query**, or a lookalike domain such as `aiplatform.googleapis.com.example`. Those clients now defer to `OmniAI::Google.config.version` like any other custom host. A real proxy in front of Vertex should pass its own hostname and set `version:` explicitly.
+- A **schemeless** host carrying a path — `aiplatform.googleapis.com/v1beta` — is no longer Vertex either. With no scheme there is no hostname to parse, so the anchored pattern matches the raw value and the path makes it fail. Give it a scheme (`https://aiplatform.googleapis.com/v1beta`) to keep it recognised.
+- A host given in **uppercase** (`HTTPS://AIPLATFORM.GOOGLEAPIS.COM`) is now Vertex. The old substring test was case-sensitive and missed it.
+- An application that sets `config.host` to a Vertex host was already getting `v1` through the config, so it sees no change — the fix matters for a client constructed with a Vertex `host:` while the config keeps its default.
+
 ## 3.16.0
 
 ### Added

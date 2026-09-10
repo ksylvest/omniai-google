@@ -62,6 +62,21 @@ RSpec.describe OmniAI::Google::Client do
         expect(client.version).to eq(OmniAI::Google::Config::Version::STABLE)
       end
 
+      it "is the stable version for the multi-region endpoint" do
+        client = described_class.new(api_key: "fake", host: "https://aiplatform.us.rep.googleapis.com")
+        expect(client.version).to eq(OmniAI::Google::Config::Version::STABLE)
+      end
+
+      it "builds a v1 path for the multi-region endpoint" do
+        client = described_class.new(
+          api_key: "fake",
+          host: "https://aiplatform.us.rep.googleapis.com",
+          project_id: "manhattan",
+          location_id: "us"
+        )
+        expect(client.path).to eq("/v1/projects/manhattan/locations/us/publishers/google")
+      end
+
       it "builds a v1 path" do
         client = described_class.new(
           api_key: "fake",
@@ -91,6 +106,35 @@ RSpec.describe OmniAI::Google::Client do
         )
         expect(client.version).to eq("v1beta1")
       end
+    end
+  end
+
+  describe "#vertex?" do
+    # Google serves Vertex AI on three host shapes: the global endpoint, a region-prefixed endpoint, and the
+    # multi-region `<geo>.rep` endpoint. Only the first two contain the literal "aiplatform.googleapis.com".
+    [
+      "https://aiplatform.googleapis.com",
+      "https://us-central1-aiplatform.googleapis.com",
+      "https://aiplatform.us.rep.googleapis.com",
+    ].each do |host|
+      it "is true for #{host}" do
+        expect(described_class.new(api_key: "fake", host:)).to be_vertex
+      end
+    end
+
+    it "is false for the Gemini API host" do
+      expect(described_class.new(api_key: "fake", host: "https://generativelanguage.googleapis.com"))
+        .not_to be_vertex
+    end
+
+    it "is false for a host that merely mentions a Vertex host elsewhere in the URL" do
+      expect(described_class.new(api_key: "fake", host: "https://proxy.example.com/aiplatform.googleapis.com"))
+        .not_to be_vertex
+    end
+
+    it "is false for a lookalike host outside googleapis.com" do
+      expect(described_class.new(api_key: "fake", host: "https://aiplatform.googleapis.com.evil.example"))
+        .not_to be_vertex
     end
   end
 
