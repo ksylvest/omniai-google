@@ -96,6 +96,37 @@ RSpec.describe OmniAI::Google::Embed do
       it { expect(process!.embedding).to eql([0.0]) }
     end
 
+    # `Embed#endpoint` branches on `Client#vertex?`, so a host shape that fails to register as Vertex silently
+    # builds a Gemini-API-shaped request against a Vertex endpoint.
+    context "with vertex on the multi-region endpoint" do
+      let(:client) do
+        OmniAI::Google::Client.new(
+          credentials:,
+          host: "https://aiplatform.us.rep.googleapis.com",
+          project_id: "test-project",
+          location_id: "us"
+        )
+      end
+
+      let(:credentials) do
+        instance_double(Google::Auth::ServiceAccountCredentials, fetch_access_token!: nil, access_token: "token")
+      end
+
+      let(:model) { described_class::Model::GEMINI_EMBEDDING_001 }
+
+      before do
+        stub_request(:post, "https://aiplatform.us.rep.googleapis.com//v1/projects/test-project/locations/us/publishers/google/models/#{model}:predict")
+          .with(body: {
+            instances: [{ content: text }],
+          })
+          .to_return_json(body: { predictions: [{ embeddings: { values: [0.0], statistics: { token_count: 10 } } }] })
+      end
+
+      it "takes the vertex predict branch" do
+        expect(process!.embedding).to eql([0.0])
+      end
+    end
+
     context "with vertex" do
       let(:client) do
         OmniAI::Google::Client.new(

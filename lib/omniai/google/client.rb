@@ -121,9 +121,26 @@ module OmniAI
         !@credentials.nil?
       end
 
+      # Vertex AI is served from three host shapes under `googleapis.com`: the global `aiplatform`, a
+      # region-prefixed `<region>-aiplatform`, and the multi-region `aiplatform.<geo>.rep`. Only the first two
+      # contain the literal "aiplatform.googleapis.com", so a substring test misses the multi-region endpoint.
+      #
+      # Deliberately wider than those three shapes: any labels are accepted between `aiplatform` and
+      # `googleapis.com`, so a future multi-region shape needs no change here. Everything it accepts is still
+      # under `googleapis.com`.
+      #
+      # Matched against the parsed hostname rather than the raw host, so a proxy whose path or query merely
+      # mentions a Vertex host is not treated as Vertex. A host given with no scheme has no hostname to parse, so
+      # the raw value is matched instead; the pattern is anchored, which keeps that safe — note that a schemeless
+      # host carrying a path therefore does not match.
+      VERTEX_HOSTNAME = /\A(?:[a-z0-9-]+-)?aiplatform(?:\.[a-z0-9-]+)*\.googleapis\.com\z/
+
       # @return [Boolean]
       def vertex?
-        @host.include?("aiplatform.googleapis.com")
+        hostname = URI.parse(@host).hostname || @host
+        VERTEX_HOSTNAME.match?(hostname.downcase)
+      rescue URI::InvalidURIError
+        false
       end
 
     private
