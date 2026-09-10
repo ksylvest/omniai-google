@@ -1,5 +1,28 @@
 # Changelog
 
+## 3.16.0
+
+### Added
+
+- **`max_tokens:` now reaches Gemini as `generationConfig.maxOutputTokens`.** The gem previously built `generationConfig` from `@format`, `@temperature` and `@options[:thinking]` only, so a caller passing `max_tokens:` got no error, no warning, and no cap — the key was swallowed by the options splat and never sent. There was no configuration workaround either: `payload` merges `chat_options` *under* an explicit `generationConfig:` key, so one set there was always clobbered. Capping Gemini output was simply unreachable.
+
+  ```ruby
+  client.chat(prompt, model: "gemini-3.7-flash", max_tokens: 8_000)
+
+  OmniAI::Google.configure { |config| config.chat_options[:max_tokens] = 8_000 }
+  ```
+
+  A per-call value wins over the configured one — the same precedence omniai-anthropic applies. The value is passed through unchanged: no floor is imposed, so the number a caller asks for is the number that reaches the wire. When the cap is hit, `finish_reason.reason` is `:length`.
+
+  **Size it as thinking headroom plus expected answer.** Gemini spends this budget on thinking *before* emitting an answer, unlike Anthropic's answer-only ceiling. Measured on `gemini-3.7-flash`, a cap of 200 returned 196 output tokens of which 115 were thinking, leaving 81 characters of answer and `finishReason: MAX_TOKENS`. A cap sized to the expected answer alone will truncate healthy responses.
+
+  `chat_options[:max_tokens]` is now excluded from the verbatim `chat_options` merge in `payload`, since `#generation_config` consumes and translates it. Left in, it reached the wire as an unknown top-level field and Gemini rejected the request with `Invalid JSON payload received. Unknown name "max_tokens": Cannot find field.` The merge *order* is unchanged — only this one key, which the gem now builds itself, is withheld.
+
+### Upgrading
+
+- Nothing to do. A caller that passes no `max_tokens:` and sets none in `chat_options` sends exactly the same payload as before.
+- If you previously set `chat_options[:max_tokens]` on the Google config, it was making every request fail with a 400. Those requests now succeed and are capped at that value.
+
 ## 3.15.0
 
 ### Fixed

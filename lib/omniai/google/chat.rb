@@ -93,9 +93,15 @@ module OmniAI
           }.compact, json: payload)
       end
 
+      # `chat_options` is forwarded verbatim, so a key this class builds itself must be excluded or it is sent
+      # twice — and `max_tokens` is OmniAI's normalized name, not one Gemini knows. Left in, it reaches the
+      # wire as an unknown top-level field and the request fails with
+      # `Invalid JSON payload received. Unknown name "max_tokens"`. `#generation_config` consumes it and
+      # emits `maxOutputTokens` instead.
+      #
       # @return [Hash]
       def payload
-        OmniAI::Google.config.chat_options.merge({
+        OmniAI::Google.config.chat_options.except(:max_tokens).merge({
           system_instruction: @prompt.messages.find(&:system?)&.serialize(context:),
           contents: @prompt.messages.reject(&:system?).map { |message| message.serialize(context:) },
           tools:,
@@ -138,9 +144,24 @@ module OmniAI
 
         data[:temperature] = @temperature if @temperature
         data[:thinkingConfig] = thinking_config if @options[:thinking]
+        data[:maxOutputTokens] = max_tokens if max_tokens
 
         data = data.compact
         data unless data.empty?
+      end
+
+      # A per-call `max_tokens:`, falling back to `config.chat_options[:max_tokens]` so a cap can also be set
+      # globally — the same precedence omniai-anthropic applies. The value is passed through unchanged: no
+      # floor is imposed, so the number a caller asks for is the number that reaches the wire.
+      #
+      # Note that Gemini spends this budget on thinking BEFORE emitting an answer, unlike Anthropic's
+      # answer-only ceiling. A cap sized to the expected answer alone will be consumed by thinking on any
+      # request the model reasons about, returning `finishReason: MAX_TOKENS` with little or no text. Size it
+      # as thinking headroom plus expected answer.
+      #
+      # @return [Integer, nil]
+      def max_tokens
+        @options[:max_tokens] || OmniAI::Google.config.chat_options[:max_tokens]
       end
 
       # @return [String]
