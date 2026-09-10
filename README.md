@@ -118,6 +118,30 @@ end
 client.chat('Be poetic.', stream:)
 ```
 
+#### Max Output Tokens
+
+`max_tokens:` caps the response, mapping to Gemini's `generationConfig.maxOutputTokens`:
+
+```ruby
+client.chat("Summarize this page.", model: "gemini-3.7-flash", max_tokens: 8_000)
+```
+
+It can also be set globally, and a per-call value wins:
+
+```ruby
+OmniAI::Google.configure do |config|
+  config.chat_options[:max_tokens] = 8_000
+end
+```
+
+The value is passed through unchanged — no floor is imposed, so the number you ask for is the number that reaches the wire. When the cap is hit, `response.finish_reason.reason` is `:length`.
+
+**Size it as thinking headroom plus expected answer.** Unlike Anthropic's answer-only ceiling, Gemini spends this budget on thinking *before* emitting an answer. A cap sized to the expected answer alone gets consumed by thinking on any request the model reasons about:
+
+```
+max_tokens: 200  ->  finish_reason :length, 196 output tokens, 115 of them thinking, 81 characters of answer
+```
+
 #### Extended Thinking
 
 Gemini models support extended thinking, which shows the model's reasoning process.

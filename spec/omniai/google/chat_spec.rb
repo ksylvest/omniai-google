@@ -163,6 +163,83 @@ RSpec.describe OmniAI::Google::Chat do
       it { expect(completion.text).to eql('{ "name": "Ringo" }') }
     end
 
+    context "with a max_tokens option" do
+      subject(:completion) { described_class.process!(prompt, client:, model:, max_tokens: 512) }
+
+      let(:prompt) { "Pick a number between 1 and 5." }
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
+          .with(body: {
+            generationConfig: { maxOutputTokens: 512 },
+            contents: [
+              { role: "user", parts: [{ text: prompt }] },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{ content: { role: "assistant", parts: [{ text: "3" }] } }],
+          })
+      end
+
+      it { expect(completion.text).to eql("3") }
+    end
+
+    context "with a max_tokens configured globally" do
+      subject(:completion) { described_class.process!(prompt, client:, model:) }
+
+      let(:prompt) { "Pick a number between 1 and 5." }
+
+      around do |example|
+        OmniAI::Google.config.chat_options[:max_tokens] = 1024
+        example.run
+      ensure
+        OmniAI::Google.config.chat_options.delete(:max_tokens)
+      end
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
+          .with(body: {
+            generationConfig: { maxOutputTokens: 1024 },
+            contents: [
+              { role: "user", parts: [{ text: prompt }] },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{ content: { role: "assistant", parts: [{ text: "3" }] } }],
+          })
+      end
+
+      it { expect(completion.text).to eql("3") }
+    end
+
+    context "with a max_tokens option overriding the configured value" do
+      subject(:completion) { described_class.process!(prompt, client:, model:, max_tokens: 512) }
+
+      let(:prompt) { "Pick a number between 1 and 5." }
+
+      around do |example|
+        OmniAI::Google.config.chat_options[:max_tokens] = 1024
+        example.run
+      ensure
+        OmniAI::Google.config.chat_options.delete(:max_tokens)
+      end
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
+          .with(body: {
+            generationConfig: { maxOutputTokens: 512 },
+            contents: [
+              { role: "user", parts: [{ text: prompt }] },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{ content: { role: "assistant", parts: [{ text: "3" }] } }],
+          })
+      end
+
+      it { expect(completion.text).to eql("3") }
+    end
+
     context "with thinking: true option" do
       subject(:completion) { described_class.process!(prompt, client:, model:, thinking: true) }
 
