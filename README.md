@@ -134,6 +134,8 @@ OmniAI::Google.configure do |config|
 end
 ```
 
+The key must be a **symbol**. `chat_options["max_tokens"]` is neither read nor withheld from the payload, so it reaches Gemini as an unknown top-level field and the request fails with a 400.
+
 The value is passed through unchanged — no floor is imposed, so the number you ask for is the number that reaches the wire. When the cap is hit, `response.finish_reason.reason` is `:length`.
 
 **Size it as thinking headroom plus expected answer.** Unlike Anthropic's answer-only ceiling, Gemini spends this budget on thinking *before* emitting an answer. A cap sized to the expected answer alone gets consumed by thinking on any request the model reasons about:
