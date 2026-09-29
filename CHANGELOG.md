@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.18.0
+
+### Added
+
+- A tool that returns an `OmniAI::Chat::File` (e.g. a PNG of a page) now sends it to the model as an `inlineData` part of the `functionResponse` (Gemini 3 multimodal function responses) instead of JSON-encoding the object. All other tool results are unchanged.
+
+  ```ruby
+  tool = OmniAI::Tool.new(->(page:) { OmniAI::Chat::File.new("page-#{page}.png", "image/png") }, name: "view_page", ...)
+  ```
+
+  Build the file from a path, not an open IO: history is re-serialized each round of the tool loop and an IO is read only once, so later rounds send an empty image.
+
 ## 3.17.0
 
 ### Fixed

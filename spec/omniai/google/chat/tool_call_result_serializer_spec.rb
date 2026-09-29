@@ -44,6 +44,24 @@ RSpec.describe OmniAI::Google::Chat::ToolCallResultSerializer do
         )
       end
     end
+
+    context "with media content" do
+      let(:file) { OmniAI::Chat::File.new(StringIO.new("fake"), "image/png") }
+      let(:tool_call_result) do
+        OmniAI::Chat::ToolCallResult.new(tool_call_id: "view_page", content: file, thought_signature: "abc123encrypted")
+      end
+
+      it "sends the media as a function response part" do
+        expect(serialize).to eql(
+          functionResponse: {
+            name: "view_page",
+            response: { name: "view_page" },
+            parts: [{ inlineData: { mimeType: "image/png", data: "ZmFrZQ==" } }],
+          },
+          thoughtSignature: "abc123encrypted"
+        )
+      end
+    end
   end
 
   describe ".deserialize" do

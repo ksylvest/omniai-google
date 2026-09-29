@@ -5,17 +5,21 @@ module OmniAI
     class Chat
       # Overrides tool-call result serialize / deserialize.
       module ToolCallResultSerializer
+        # A result whose content is media (e.g. an image) is sent as a multimodal function response part.
+        #
         # @param tool_call_response [OmniAI::Chat::ToolCallResult]
         # @return [Hash]
         def self.serialize(tool_call_response, *)
+          name = tool_call_response.tool_call_id
+          content = tool_call_response.content
+
           result = {
-            functionResponse: {
-              name: tool_call_response.tool_call_id,
-              response: {
-                name: tool_call_response.tool_call_id,
-                content: tool_call_response.content,
-              },
-            },
+            functionResponse:
+              if content.is_a?(OmniAI::Chat::Media)
+                { name:, response: { name: }, parts: [MediaSerializer.serialize(content)] }
+              else
+                { name:, response: { name:, content: } }
+              end,
           }
 
           thought_signature = tool_call_response.options[:thought_signature]
