@@ -246,6 +246,33 @@ RSpec.describe OmniAI::Google::Transcribe do
       end
     end
 
+    context "when the audio was uploaded" do
+      before do
+        allow(OmniAI::Google::Bucket).to receive(:process!).and_return("gs://bucket/uploaded.mp3")
+        allow(transcribe).to receive(:request_batch!) do
+          transcribe.send(:batch_payload)
+          batch_response
+        end
+      end
+
+      it "cleans up the upload on success" do
+        transcribe.send(:process_async!)
+        expect(transcribe).to have_received(:cleanup_gcs_file).with("gs://bucket/uploaded.mp3")
+      end
+
+      it "cleans up the upload when polling times out" do
+        allow(transcribe).to receive(:poll_operation!).and_raise(StandardError, "Operation timed out")
+        expect { transcribe.send(:process_async!) }.to raise_error(StandardError, "Operation timed out")
+        expect(transcribe).to have_received(:cleanup_gcs_file).with("gs://bucket/uploaded.mp3")
+      end
+
+      it "cleans up the upload when the batch request fails" do
+        allow(batch_response).to receive_messages(status: double(ok?: false), body: "Error")
+        expect { transcribe.send(:process_async!) }.to raise_error(OmniAI::HTTPError)
+        expect(transcribe).to have_received(:cleanup_gcs_file).with("gs://bucket/uploaded.mp3")
+      end
+    end
+
     context "with user-provided GCS URI" do
       subject(:transcribe) { described_class.new("gs://user-bucket/file.mp3", client:, model: "latest_long") }
 

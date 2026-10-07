@@ -194,8 +194,8 @@ module OmniAI
         audio_uri = if @io.is_a?(String) && @io.start_with?("gs://")
                       @io
                     else
-                      # Force GCS upload for batch recognition
-                      Bucket.process!(client: @client, io: @io)
+                      # Force GCS upload for batch recognition; process_async! deletes it
+                      @uploaded_gcs_uri ||= Bucket.process!(client: @client, io: @io)
                     end
 
         {
@@ -492,7 +492,8 @@ module OmniAI
         estimated_duration_seconds = (file_size_bytes * 8.0) / assumed_bitrate_bps
         estimated_processing_seconds = estimated_duration_seconds * 0.3
         total_wait_seconds = estimated_processing_seconds + 90
-        final_wait_seconds = total_wait_seconds.clamp(180, 10_800)
+        # Batch jobs can queue for minutes regardless of audio length
+        final_wait_seconds = total_wait_seconds.clamp(600, 10_800)
         (final_wait_seconds / 15).ceil
       end
     end
