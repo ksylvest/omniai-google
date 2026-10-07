@@ -557,6 +557,19 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
     end
   end
 
+  describe "#poll_operation!" do
+    before do
+      stub_request(:get, "https://us-central1-speech.googleapis.com/v2/projects/test-project/locations/us-central1/operations/1?key=fake")
+        .to_return(status: 200, headers: { "Content-Type" => "application/json" },
+          body: { name: "op", error: { code: 3, message: "Bad audio" } }.to_json)
+    end
+
+    it "raises OmniAI::Error with the operation's message" do
+      expect { transcribe.send(:poll_operation!, "projects/test-project/locations/us-central1/operations/1") }
+        .to raise_error(OmniAI::Error, "Operation failed: Bad audio")
+    end
+  end
+
   describe "#calculate_max_polling_attempts" do
     it "waits at least 600 seconds for short audio" do
       allow(transcribe).to receive(:calculate_file_size).and_return(64_000)

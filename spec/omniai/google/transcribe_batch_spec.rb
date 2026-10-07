@@ -118,6 +118,37 @@ RSpec.describe OmniAI::Google::Transcribe do
         expect(result["text"]).to eq ""
       end
     end
+
+    context "with a per-file error" do
+      let(:model) { "chirp_3" }
+      let(:format) { "json" }
+      # Captured from a live chirp_3 batchRecognize of an Ogg Vorbis file (2026-10-07).
+      let(:batch_result) do
+        {
+          "done" => true,
+          "response" => {
+            "@type" => "type.googleapis.com/google.cloud.speech.v2.BatchRecognizeResponse",
+            "results" => {
+              "gs://bucket/audio.ogg" => {
+                "error" => {
+                  "code" => 3,
+                  "message" => "Audio data does not appear to be in a supported encoding. If you believe this to " \
+                    "be incorrect, try explicitly specifying the decoding parameters.",
+                },
+                "transcript" => {},
+                "inlineResult" => { "transcript" => {} },
+              },
+            },
+            "totalBilledDuration" => "0s",
+          },
+        }
+      end
+
+      it "raises with Google's message" do
+        expect { transcribe.send(:extract_batch_transcript, batch_result) }
+          .to raise_error(OmniAI::Error, /code 3.*not appear to be in a supported encoding/)
+      end
+    end
   end
 
   describe "#build_segments" do

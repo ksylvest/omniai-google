@@ -237,7 +237,7 @@ module OmniAI
           # Check for errors
           if operation_data["error"]
             error_message = operation_data.dig("error", "message") || "Unknown error"
-            raise HTTPError, "Operation failed: #{error_message}"
+            raise OmniAI::Error, "Operation failed: #{error_message}"
           end
 
           # Check if done
@@ -287,6 +287,11 @@ module OmniAI
 
         file_result = batch_results.values.first
         return empty_transcript_data unless file_result
+
+        # A done operation can still carry a per-file failure (e.g. unsupported encoding)
+        if (error = file_result["error"])
+          raise OmniAI::Error, "Transcription failed (code #{error['code']}): #{error['message']}"
+        end
 
         transcript_segments = file_result.dig("transcript", "results")
         return empty_transcript_data unless transcript_segments&.any?
