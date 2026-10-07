@@ -69,9 +69,6 @@ module OmniAI
       #
       # @return [OmniAI::Transcribe::Transcription]
       def process_async!
-        # Track if we uploaded the file for cleanup
-        uploaded_gcs_uri = nil
-
         # Start the batch recognition job
         response = request_batch!
 
@@ -82,23 +79,16 @@ module OmniAI
 
         raise HTTPError, "No operation name returned from batch recognition request" unless operation_name
 
-        # Extract GCS URI for cleanup if we uploaded it
-        if operation_data.dig("metadata", "batchRecognizeRequest", "files")
-          file_uri = operation_data.dig("metadata", "batchRecognizeRequest", "files", 0, "uri")
-          # Only mark for cleanup if it's not a user-provided GCS URI
-          uploaded_gcs_uri = file_uri unless @io.is_a?(String) && @io.start_with?("gs://")
-        end
-
         # Poll for completion
         result = poll_operation!(operation_name)
 
         # Extract transcript from completed operation
         transcript_data = extract_batch_transcript(result)
 
-        # Clean up uploaded file if we created it
-        cleanup_gcs_file(uploaded_gcs_uri) if uploaded_gcs_uri
-
         Transcription.parse(model: @model, format: @format, data: transcript_data)
+      ensure
+        # Delete our upload even when the request fails or polling times out
+        cleanup_gcs_file(@uploaded_gcs_uri) if @uploaded_gcs_uri
       end
 
     protected
