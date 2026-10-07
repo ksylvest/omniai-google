@@ -475,7 +475,7 @@ module OmniAI
 
         file = bucket.file(object_name)
         file&.delete
-      rescue ::Google::Cloud::Error => e
+      rescue StandardError => e # never mask the transcript or the original error
         @client.logger&.warn("Failed to cleanup GCS file #{gcs_uri}: #{e.message}")
       end
 

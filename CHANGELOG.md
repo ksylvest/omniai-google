@@ -5,7 +5,7 @@
 ### Fixed
 
 - **Batch transcription no longer times out after 180 seconds on short audio.** The polling budget scales with file size but had a 180-second floor, and `chirp_3` batch jobs can queue for minutes regardless of length (a live 4-second clip exceeded 180s). The floor is now 600 seconds; the 3-hour ceiling is unchanged.
-- **Uploaded audio is deleted when batch transcription fails.** Cleanup ran only after success, so a failed `batchRecognize` request or a polling timeout left the upload in the `<project_id>-speech-audio` bucket. Cleanup now runs in an `ensure`, keyed off the URI the gem uploaded rather than the operation metadata.
+- **Uploaded audio is deleted when batch transcription fails.** Cleanup ran only after success, so a failed `batchRecognize` request or a polling timeout left the upload in the `<project_id>-speech-audio` bucket. Cleanup now runs in an `ensure`, keyed off the URI the gem uploaded rather than the operation metadata. A cleanup failure is logged and never replaces the transcript or the original error.
 
 ## 3.18.0
 

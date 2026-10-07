@@ -271,6 +271,24 @@ RSpec.describe OmniAI::Google::Transcribe do
         expect { transcribe.send(:process_async!) }.to raise_error(OmniAI::HTTPError)
         expect(transcribe).to have_received(:cleanup_gcs_file).with("gs://bucket/uploaded.mp3")
       end
+
+      it "forgets the upload once cleaned up" do
+        transcribe.send(:process_async!)
+        expect(transcribe.instance_variable_get(:@uploaded_gcs_uri)).to be_nil
+      end
+
+      it "returns the transcript when cleanup fails" do
+        allow(transcribe).to receive(:cleanup_gcs_file).and_call_original
+        allow(transcribe).to receive(:create_storage_client).and_raise(RuntimeError, "storage down")
+        expect(transcribe.send(:process_async!).text).to eq "Hello world"
+      end
+
+      it "surfaces the original error when cleanup fails" do
+        allow(transcribe).to receive(:cleanup_gcs_file).and_call_original
+        allow(transcribe).to receive(:create_storage_client).and_raise(RuntimeError, "storage down")
+        allow(transcribe).to receive(:poll_operation!).and_raise(StandardError, "Operation timed out")
+        expect { transcribe.send(:process_async!) }.to raise_error(StandardError, "Operation timed out")
+      end
     end
 
     context "with user-provided GCS URI" do

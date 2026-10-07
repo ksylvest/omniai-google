@@ -89,6 +89,7 @@ module OmniAI
       ensure
         # Delete our upload even when the request fails or polling times out
         cleanup_gcs_file(@uploaded_gcs_uri) if @uploaded_gcs_uri
+        @uploaded_gcs_uri = nil
       end
 
     protected
