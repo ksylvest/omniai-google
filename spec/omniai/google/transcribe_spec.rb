@@ -233,6 +233,16 @@ RSpec.describe OmniAI::Google::Transcribe do
       expect(result).to be_a(OmniAI::Transcribe::Transcription)
     end
 
+    context "when the batch response has no operation name" do
+      before do
+        allow(batch_response).to receive(:parse).and_return({})
+      end
+
+      it "raises OmniAI::Error" do
+        expect { transcribe.send(:process_async!) }.to raise_error(OmniAI::Error, /No operation name/)
+      end
+    end
+
     context "when batch request fails" do
       before do
         failed_response = instance_double(HTTP::Response).tap do |response|

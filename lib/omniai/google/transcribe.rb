@@ -77,7 +77,7 @@ module OmniAI
         operation_data = response.parse
         operation_name = operation_data["name"]
 
-        raise HTTPError, "No operation name returned from batch recognition request" unless operation_name
+        raise OmniAI::Error, "No operation name returned from batch recognition request" unless operation_name
 
         # Poll for completion
         result = poll_operation!(operation_name)

@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.18.2
+
+### Fixed
+
+- **A failed batch transcription now raises instead of returning blank text.** Google can finish a `batchRecognize` operation while reporting an error for the file itself (e.g. Ogg Vorbis: "Audio data does not appear to be in a supported encoding"). The gem ignored that and returned `text: ""`. It now raises `OmniAI::Error` with Google's code and message.
+- **Operation-level transcription errors no longer crash with `NoMethodError`.** "Operation failed" and "No operation name" raised `OmniAI::HTTPError` with a string, but `HTTPError` expects an HTTP response, so callers got `NoMethodError: undefined method 'status'`. Both now raise `OmniAI::Error` with the message.
+
 ## 3.18.1
 
 ### Fixed
