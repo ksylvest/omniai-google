@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.19.0
+
+### Added
+
+- `Model::GEMINI_4_ARGON` (`"gemini-4-argon"`), GA upstream as of 2026-10-13. Verified live on Vertex at `location_id: "global"` (text, usage, streaming, `thinking: { effort: }` low/medium/high); it 404s at regional locations such as `us-central1`. `GEMINI_PRO` and `DEFAULT_MODEL` are unchanged.
+
+  Google's migration notes for Argon: `temperature` / `top_p` / `top_k` are ignored, `max_tokens` covers thinking plus answer (raise any cap below 32,768), and hard prompts can run several minutes, so set `timeout:` to at least 15 minutes.
+
 ## 3.18.2
 
 ### Fixed

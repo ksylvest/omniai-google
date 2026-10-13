@@ -13,6 +13,16 @@ RSpec.describe OmniAI::Google::Chat do
     end
   end
 
+  describe "Model" do
+    it "has GEMINI_4_ARGON" do
+      expect(described_class::Model::GEMINI_4_ARGON).to eq("gemini-4-argon")
+    end
+
+    it "keeps GEMINI_PRO on gemini-3.1-pro-preview" do
+      expect(described_class::Model::GEMINI_PRO).to eq("gemini-3.1-pro-preview")
+    end
+  end
+
   describe ".process!" do
     subject(:completion) { described_class.process!(prompt, client:, model:) }
 
