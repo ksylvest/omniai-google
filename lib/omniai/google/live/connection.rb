@@ -47,6 +47,7 @@ module OmniAI
         # @raise [ConnectTimeout]
         def connect
           @io = open_socket
+          @wake_reader, @wake_writer = IO.pipe # for abort!: on Linux, closing a socket doesn't interrupt a select on it
           @driver = WebSocket::Driver.client(self, binary_data_format: :string)
           @headers.each { |name, value| @driver.set_header(name, value) }
           @driver.on(:open) { @pending << [:open] }
@@ -60,7 +61,7 @@ module OmniAI
 
         # @return [Boolean]
         def open?
-          !@finished
+          !@finished && !@aborted
         end
 
         # @param payload [String]
@@ -186,7 +187,10 @@ module OmniAI
 
         def idle(readers, writers)
           timeout = @ping_at ? @ping_at + PONG_TIMEOUT - monotonic : PING_INTERVAL
-          return if timeout.positive? && IO.select(readers, writers, nil, timeout)
+          ready = IO.select([*readers, @wake_reader], writers, nil, timeout) if timeout.positive?
+          raise IOError, "aborted" if @aborted
+          return if ready
+
           raise PongTimeout, "no pong within #{PONG_TIMEOUT}s" if @ping_at
 
           @ping_at = monotonic
@@ -204,25 +208,29 @@ module OmniAI
         # Drops the socket; the reader thread then finishes with `error`.
         def abort!(error = nil)
           @abort_error ||= error
-          @io.close
-        rescue IOError, SystemCallError
-          nil
+          @aborted = true
+          close_quietly(@io)
+          @wake_writer.write_nonblock(".", exception: false)
+        rescue IOError
+          nil # already finished
         end
 
         def finish(code, reason, error)
           return if @finished
 
           @finished = true
-          begin
-            @io.close
-          rescue IOError, SystemCallError
-            nil
-          end
+          [@io, @wake_reader, @wake_writer].each { |io| close_quietly(io) }
           begin
             @on_close.call(code, reason, error)
           rescue StandardError
             nil
           end
+        end
+
+        def close_quietly(io)
+          io.close
+        rescue IOError, SystemCallError
+          nil
         end
 
         # @yieldreturn [StandardError] raised once the deadline passes
