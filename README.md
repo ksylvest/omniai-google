@@ -496,8 +496,9 @@ session.close
   session and raises `Live::TimeoutError`. The session always ends with exactly one `Event::Closed`, including when the
   socket drops or your handler raises (`event.error`).
 - **Tools:** a raising tool answers the model with its error class only, and the session carries on.
-- **Limits (Google):** a connection lasts about 10 minutes (`GoAway` arrives about 60 s before the end), and an
-  audio-only session 15 minutes without `compression:`. The gem does not reconnect: open a new session and re-seed it
+- **Limits (Google):** a connection lasts about 10 minutes, and an audio-only session 15 minutes without
+  `compression:`. Measured live at `us` (2026-10-15): `GoAway` arrived at 9 min (`time_left` 30 s, not the 60 s
+  Google documents) and the server closed with 1000 at 9.5 min. Reconnect as soon as `GoAway` arrives. The gem does not reconnect: open a new session and re-seed it
   (`resumption:` takes Google's resumption handles if you prefer that).
 - **Privacy:** the gem never logs or raises audio, transcripts or tool arguments. `Live::Error#message` carries codes and
   ids only; Google's close reason is on `#reason`, and `Event::Closed#inspect` leaves it out.
