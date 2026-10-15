@@ -487,4 +487,48 @@ RSpec.describe OmniAI::Google::Transcribe do
       end
     end
   end
+
+  describe "Gemini models" do
+    let(:transcription) { OmniAI::Transcribe::Transcription.new(text: "Hi", model: "gemini-3.5-transcribe", format: "json") }
+
+    before { allow(described_class::Gemini).to receive(:process!).and_return(transcription) }
+
+    it "routes gemini-* models to the Gemini path with its options" do
+      model = "gemini-3.5-transcribe"
+      expect(client.transcribe("gs://bucket/a.wav", model:, diarization: true)).to be(transcription)
+      expect(described_class::Gemini).to have_received(:process!)
+        .with("gs://bucket/a.wav", client:, model:, language: nil, format: nil, diarization: true)
+    end
+
+    it "rejects Gemini-only options on Chirp models" do
+      expect { client.transcribe("gs://bucket/a.wav", model: "chirp_3", word_timestamps: true) }
+        .to raise_error(ArgumentError, /only supported by Gemini transcribe models/)
+    end
+  end
+
+  # Guards the Chirp request against the Gemini addition: same endpoint, same payload.
+  describe "Chirp 3 request (unchanged)" do
+    let(:client) { OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "us-central1") }
+    let(:batch_url) { "https://us-speech.googleapis.com/v2/projects/test-project/locations/us/recognizers/_:batchRecognize?key=fake" }
+
+    before do
+      stub_request(:post, batch_url).to_return_json(body: { name: "operations/1" })
+      stub_request(:get, "https://us-speech.googleapis.com/v2/operations/1?key=fake").to_return_json(body: {
+        done: true,
+        response: { results: { "gs://bucket/a.wav" => {
+          transcript: { results: [{ alternatives: [{ transcript: "Hi" }] }] },
+        } } },
+      })
+    end
+
+    it "posts the same batchRecognize payload" do
+      expect(client.transcribe("gs://bucket/a.wav", model: "chirp_3").text).to eql("Hi")
+      expect(a_request(:post, batch_url).with(body: {
+        config: { model: "chirp_3", autoDecodingConfig: {}, languageCodes: ["auto"],
+                  features: { enableAutomaticPunctuation: true }, },
+        files: [{ uri: "gs://bucket/a.wav" }],
+        recognitionOutputConfig: { inlineResponseConfig: {} },
+      })).to have_been_made
+    end
+  end
 end
