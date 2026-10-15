@@ -456,6 +456,52 @@ client.transcribe("audio.mp3", bucket_name: "my-custom-audio-bucket")
 - Audio files are automatically deleted after successful transcription
 - If transcription fails, temporary files may remain and should be cleaned up manually
 
+### Live
+
+A Gemini Live session (Vertex `BidiGenerateContent` over a WebSocket): stream microphone audio in, get speech,
+transcripts and tool calls back. Vertex credentials only.
+
+```ruby
+client = OmniAI::Google::Client.new(
+  project_id: "...", credentials: "...",
+  location_id: "us", host: "https://aiplatform.us.rep.googleapis.com" # gemini-3.8-live: us, eu or us-central1 (not global)
+)
+
+session = client.live(
+  model: OmniAI::Google::Live::Model::GEMINI_3_8_LIVE,
+  system: "You are an intake assistant...",
+  tools: [RecordAnswer.new],       # OmniAI::Tool; run automatically, results sent back
+  tool_behavior: :blocking,        # default; or :non_blocking, or { "flag" => :non_blocking }
+  voice: "Kore",                   # optional
+  vad: { silence_ms: 800 },        # optional
+  compression: true                # optional: lifts the 15-minute session cap
+) do |event|
+  case event
+  when OmniAI::Google::Live::Event::Audio then speaker.write(event.data) # PCM16, 24 kHz, mono
+  when OmniAI::Google::Live::Event::Transcript then caption(event.role, event.text) # :user / :model
+  when OmniAI::Google::Live::Event::Interrupted then speaker.flush
+  when OmniAI::Google::Live::Event::GoAway then reconnect_within(event.time_left)
+  when OmniAI::Google::Live::Event::Usage then track(event.usage, event.data) # data has per-modality counts
+  when OmniAI::Google::Live::Event::Closed then reconnect_or_finish(event.code, event.error)
+  end
+end
+
+session.send_audio(pcm16_16khz) # from any thread
+session.send_text("We are at question 12; answers so far: ...") # e.g. to re-seed after reconnecting
+session.close
+```
+
+- **Threads:** each session has one socket and one reader thread. Events are yielded, and tools run, on that thread;
+  `send_*` may be called from any thread. A send that blocks longer than `write_timeout:` (default 5 s) closes the
+  session and raises `Live::TimeoutError`. The session always ends with exactly one `Event::Closed`, including when the
+  socket drops or your handler raises (`event.error`).
+- **Tools:** a raising tool answers the model with its error class only, and the session carries on.
+- **Limits (Google):** a connection lasts about 10 minutes (`GoAway` arrives about 60 s before the end), and an
+  audio-only session 15 minutes without `compression:`. The gem does not reconnect: open a new session and re-seed it
+  (`resumption:` takes Google's resumption handles if you prefer that).
+- **Privacy:** the gem never logs or raises audio, transcripts or tool arguments. `Live::Error#message` carries codes and
+  ids only; Google's close reason is on `#reason`, and `Event::Closed#inspect` leaves it out.
+
 ### Embed
 
 Text can be converted into a vector embedding for similarity comparison usage via:
