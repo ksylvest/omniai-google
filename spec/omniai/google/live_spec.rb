@@ -131,6 +131,16 @@ RSpec.describe OmniAI::Google::Live do
       end
     end
 
+    context "with compression thresholds" do
+      let(:options) { { compression: { trigger_tokens: 10_000, target_tokens: 5_000 } } }
+
+      it "sends the trigger and the sliding-window target" do
+        open_session
+        expect(next_message.dig("setup", "contextWindowCompression"))
+          .to eql("triggerTokens" => 10_000, "slidingWindow" => { "targetTokens" => 5_000 })
+      end
+    end
+
     context "when the server rejects the setup" do
       let(:script) do
         lambda do |connection, _message|

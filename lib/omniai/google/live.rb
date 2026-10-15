@@ -67,7 +67,9 @@ module OmniAI
       # @param transcription [Boolean] transcribe both the user's and the model's speech (default true)
       # @param vad [Hash, nil] automatic activity detection: `disabled:`, `start_sensitivity:` / `end_sensitivity:`
       #   (`:high` or `:low`), `prefix_padding_ms:`, `silence_ms:`
-      # @param compression [Boolean] sliding-window context compression, which lifts the 15-minute session cap
+      # @param compression [Boolean, Hash] sliding-window context compression, which lifts the 15-minute session cap and
+      #   bounds the context re-billed every turn. true uses Google's defaults (trigger at 80% of the context window);
+      #   or pass `trigger_tokens:` / `target_tokens:`
       # @param resumption [Boolean, String, nil] true to receive resumption handles, or a handle to resume
       # @param write_timeout [Numeric] seconds a send may block before the session is closed
       #
@@ -298,7 +300,7 @@ module OmniAI
             inputAudioTranscription: ({} if @transcription),
             outputAudioTranscription: ({} if @transcription),
             realtimeInputConfig: realtime_input_config,
-            contextWindowCompression: ({ slidingWindow: {} } if @compression),
+            contextWindowCompression: context_window_compression,
             sessionResumption: session_resumption,
           }.compact,
         }
@@ -333,6 +335,17 @@ module OmniAI
       # @return [String, nil] e.g. "START_SENSITIVITY_HIGH"
       def sensitivity(edge, level)
         "#{edge}_SENSITIVITY_#{level.to_s.upcase}" if level
+      end
+
+      # @return [Hash, nil]
+      def context_window_compression
+        return unless @compression
+
+        options = @compression.is_a?(Hash) ? @compression : {}
+        {
+          triggerTokens: options[:trigger_tokens],
+          slidingWindow: { targetTokens: options[:target_tokens] }.compact,
+        }.compact
       end
 
       # @return [Hash, nil]
