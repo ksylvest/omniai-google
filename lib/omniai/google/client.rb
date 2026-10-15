@@ -96,8 +96,9 @@ module OmniAI
       # @param model [String] optional
       # @param language [String, Array<String>] optional - language codes for transcription
       # @param format [Symbol] optional - :json or :verbose_json
-      def transcribe(input, model: Transcribe::DEFAULT_MODEL, language: nil, format: nil)
-        Transcribe.process!(input, model:, language:, format:, client: self)
+      # @param options [Hash] Gemini transcribe models only: `diarization:`, `word_timestamps:`, `vocabulary:`
+      def transcribe(input, model: Transcribe::DEFAULT_MODEL, language: nil, format: nil, **)
+        Transcribe.process!(input, model:, language:, format:, client: self, **)
       end
 
       # @return [String]
