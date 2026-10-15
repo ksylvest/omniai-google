@@ -444,7 +444,7 @@ session = client.live(
   tool_behavior: :blocking,        # default; or :non_blocking, or { "flag" => :non_blocking }
   voice: "Kore",                   # optional
   vad: { silence_ms: 800 },        # optional
-  compression: true                # optional: lifts the 15-minute session cap
+  compression: { trigger_tokens: 10_000, target_tokens: 5_000 } # optional (or true): see Limits
 ) do |event|
   case event
   when OmniAI::Google::Live::Event::Audio then speaker.write(event.data) # PCM16, 24 kHz, mono
@@ -468,7 +468,11 @@ session.close
 - **Tools:** a raising tool answers the model with its error class only, and the session carries on.
 - **Limits (Google):** a connection lasts about 10 minutes, and an audio-only session 15 minutes without
   `compression:`. Measured live at `us` (2026-10-15): `GoAway` arrived at 9 min (`time_left` 30 s, not the 60 s
-  Google documents) and the server closed with 1000 at 9.5 min. Reconnect as soon as `GoAway` arrives. The gem does not reconnect: open a new session and re-seed it
+  Google documents) and the server closed with 1000 at 9.5 min. Reconnect as soon as `GoAway` arrives.
+- **Cost:** every turn re-bills the whole context. `compression:` bounds it: in a live test with a 10,000-token trigger
+  and 5,000-token target, `promptTokenCount` dropped from about 8,500 to 3,400 whenever the next turn would pass the
+  trigger (a sawtooth instead of linear growth; 51% fewer prompt tokens over 12 turns). The oldest turns are dropped,
+  so keep anything the model must remember in your own state and re-send it when needed. The gem does not reconnect: open a new session and re-seed it
   (`resumption:` takes Google's resumption handles if you prefer that).
 - **Privacy:** the gem never logs or raises audio, transcripts or tool arguments. `Live::Error#message` carries codes and
   ids only; Google's close reason is on `#reason`, and `Event::Closed#inspect` leaves it out.

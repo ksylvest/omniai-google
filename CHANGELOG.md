@@ -4,7 +4,7 @@
 
 ### Added
 
-- `client.live` / `OmniAI::Google::Live`: Gemini Live sessions on Vertex (`BidiGenerateContent` over a WebSocket), for `gemini-3.8-live`. Streams PCM16 16 kHz audio in; yields audio (24 kHz), transcripts, tool calls, interruptions, voice activity, go-away, resumption updates, usage and a final `Closed`. `OmniAI::Tool`s run automatically (blocking by default). One reader thread per session over `websocket-driver` (new dependency); sends are thread-safe and bounded by `write_timeout:`. A fresh access token is fetched per connection. Never logs audio, transcripts or tool arguments. Verified live at `us` and `us-central1`; `global` does not serve the model.
+- `client.live` / `OmniAI::Google::Live`: Gemini Live sessions on Vertex (`BidiGenerateContent` over a WebSocket), for `gemini-3.8-live`. Streams PCM16 16 kHz audio in; yields audio (24 kHz), transcripts, tool calls, interruptions, voice activity, go-away, resumption updates, usage and a final `Closed`. `OmniAI::Tool`s run automatically (blocking by default). One reader thread per session over `websocket-driver` (new dependency); sends are thread-safe and bounded by `write_timeout:`. A fresh access token is fetched per connection. `compression:` takes `true` or `trigger_tokens:` / `target_tokens:` (verified live: the re-billed context drops back under the target each time the next turn would pass the trigger). Never logs audio, transcripts or tool arguments. Verified live at `us` and `us-central1`; `global` does not serve the model.
 
 ## 3.19.0
 
