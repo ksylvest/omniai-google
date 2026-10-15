@@ -9,14 +9,19 @@ module OmniAI
       # A WebSocket client over TCP or TLS, driven by websocket-driver with one reader thread per connection.
       #
       # Callbacks run on the reader thread. Writes may come from any thread: they are serialized by a mutex and bounded
-      # by `write_timeout`, so a stalled peer can't block the caller indefinitely. `on_close` is called exactly once,
-      # whether the peer closes, the socket hits EOF or errors, a write times out, or a callback raises.
+      # by `write_timeout`, so a stalled peer can't block the caller indefinitely. An idle connection is pinged, so a
+      # silently dropped path is noticed. `on_close` is called exactly once, whether the peer closes, the socket hits
+      # EOF or errors, a write or pong times out, or a callback raises.
       class Connection
-        CONNECT_TIMEOUT = 10 # seconds
+        CONNECT_TIMEOUT = 10 # seconds, TCP and TLS together
         CLOSE_TIMEOUT = 2 # seconds
+        PING_INTERVAL = 15 # seconds without a frame before pinging
+        PONG_TIMEOUT = 10 # seconds
         READ_CHUNK = 16_384 # bytes
 
+        class ConnectTimeout < StandardError; end
         class WriteTimeout < StandardError; end
+        class PongTimeout < StandardError; end
 
         # @return [String]
         attr_reader :url
@@ -39,6 +44,7 @@ module OmniAI
           @finished = false
         end
 
+        # @raise [ConnectTimeout]
         def connect
           @io = open_socket
           @driver = WebSocket::Driver.client(self, binary_data_format: :string)
@@ -92,8 +98,8 @@ module OmniAI
           until data.empty?
             result = @io.write_nonblock(data, exception: false)
             case result
-            when :wait_writable then wait!(nil, [@io.to_io], deadline)
-            when :wait_readable then wait!([@io.to_io], nil, deadline)
+            when :wait_writable then wait!(nil, [@io.to_io], deadline) { write_timeout }
+            when :wait_readable then wait!([@io.to_io], nil, deadline) { write_timeout }
             else data = data.byteslice(result..)
             end
           end
@@ -101,24 +107,49 @@ module OmniAI
 
       private
 
+        # @return [WriteTimeout]
+        def write_timeout
+          WriteTimeout.new("write timed out after #{@write_timeout}s")
+        end
+
         # @return [Socket, OpenSSL::SSL::SSLSocket]
         def open_socket
           uri = URI.parse(@url)
-          tcp = Socket.tcp(uri.host, uri.port, connect_timeout: CONNECT_TIMEOUT)
+          deadline = monotonic + CONNECT_TIMEOUT
+          tcp = begin
+            Socket.tcp(uri.host, uri.port, connect_timeout: CONNECT_TIMEOUT)
+          rescue Errno::ETIMEDOUT, IO::TimeoutError
+            raise ConnectTimeout, "connect timed out after #{CONNECT_TIMEOUT}s"
+          end
           return tcp unless uri.scheme == "wss"
 
+          handshake(tcp, uri.host, deadline)
+        end
+
+        # @return [OpenSSL::SSL::SSLSocket]
+        def handshake(tcp, host, deadline)
           context = OpenSSL::SSL::SSLContext.new
           context.set_params(verify_mode: OpenSSL::SSL::VERIFY_PEER)
           ssl = OpenSSL::SSL::SSLSocket.new(tcp, context)
-          ssl.hostname = uri.host
+          ssl.hostname = host
           ssl.sync_close = true
-          ssl.connect
-          ssl
+          timeout = -> { ConnectTimeout.new("connect timed out after #{CONNECT_TIMEOUT}s") }
+          loop do
+            case ssl.connect_nonblock(exception: false)
+            when :wait_readable then wait!([tcp], nil, deadline, &timeout)
+            when :wait_writable then wait!(nil, [tcp], deadline, &timeout)
+            else return ssl
+            end
+          end
+        rescue StandardError
+          tcp.close
+          raise
         end
 
         def read_loop
           loop do
-            data = @io.readpartial(READ_CHUNK)
+            data = read_chunk
+            @ping_at = nil
             events = @mutex.synchronize do
               @driver.parse(data)
               @pending.slice!(0..)
@@ -130,10 +161,36 @@ module OmniAI
           finish(nil, nil, @abort_error)
         rescue IOError, SystemCallError, OpenSSL::SSL::SSLError => e
           finish(nil, nil, @abort_error || e)
-        rescue StandardError => e # a callback raised
+        rescue StandardError => e # a callback raised, or a ping went unanswered
           finish(nil, nil, e)
         ensure
           finish(nil, nil, @abort_error)
+        end
+
+        # Waits for data, pinging when idle for PING_INTERVAL. Any frame (a pong included) counts as an answer.
+        #
+        # @raise [PongTimeout, EOFError]
+        #
+        # @return [String]
+        def read_chunk
+          loop do
+            result = @io.read_nonblock(READ_CHUNK, exception: false)
+            case result
+            when :wait_readable then idle([@io.to_io], nil)
+            when :wait_writable then idle(nil, [@io.to_io])
+            when nil then raise EOFError
+            else return result
+            end
+          end
+        end
+
+        def idle(readers, writers)
+          timeout = @ping_at ? @ping_at + PONG_TIMEOUT - monotonic : PING_INTERVAL
+          return if timeout.positive? && IO.select(readers, writers, nil, timeout)
+          raise PongTimeout, "no pong within #{PONG_TIMEOUT}s" if @ping_at
+
+          @ping_at = monotonic
+          @mutex.synchronize { @driver.ping }
         end
 
         def dispatch(type, *args)
@@ -168,11 +225,12 @@ module OmniAI
           end
         end
 
+        # @yieldreturn [StandardError] raised once the deadline passes
         def wait!(readers, writers, deadline)
           remaining = deadline - monotonic
           return if remaining.positive? && IO.select(readers, writers, nil, remaining)
 
-          raise WriteTimeout, "write timed out after #{@write_timeout}s"
+          raise yield
         end
 
         def monotonic

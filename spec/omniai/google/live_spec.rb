@@ -282,6 +282,17 @@ RSpec.describe OmniAI::Google::Live do
       end
     end
 
+    context "when the session has no tools" do
+      let(:options) { { tools: nil } }
+
+      it "responds with an unknown-tool error" do
+        open_session
+        next_message
+        expect(next_message.dig("toolResponse", "functionResponses", 0, "response"))
+          .to eql("error" => "unknown tool: weather")
+      end
+    end
+
     context "when the server cancels calls" do
       let(:script) do
         lambda do |connection, message|
@@ -446,6 +457,106 @@ RSpec.describe OmniAI::Google::Live do
         expect(collect_events(until_class: described_class::Event::Closed).last)
           .to be_a(described_class::Event::Closed)
       end
+    end
+
+    context "when the server sends a malformed frame" do
+      let(:script) do
+        lambda do |connection, message|
+          if message.key?("setup")
+            connection.reply({ setupComplete: { sessionId: "session-1" } })
+            connection.driver.binary('{"serverContent": {"inputTranscription": {"text": "my SSN is'.bytes)
+          end
+        end
+      end
+
+      it "yields Closed with a content-free error" do
+        open_session
+        closed = collect_events(until_class: described_class::Event::Closed).last
+        expect(closed.error).to be_a(described_class::Error)
+        expect(closed.error.message).to include("JSON::ParserError", "session-1")
+        expect(closed.error.message).not_to include("SSN")
+        expect(closed.error.cause).to be_nil
+      end
+    end
+
+    context "when the server sends a frame that isn't an object" do
+      let(:script) do
+        lambda do |connection, message|
+          if message.key?("setup")
+            connection.reply({ setupComplete: { sessionId: "session-1" } })
+            connection.driver.binary('["my SSN is 123"]'.bytes)
+          end
+        end
+      end
+
+      it "yields Closed with a content-free error" do
+        open_session
+        closed = collect_events(until_class: described_class::Event::Closed).last
+        expect(closed.error).to be_a(described_class::Error)
+        expect(closed.error.message).not_to include("SSN")
+      end
+    end
+
+    context "when the connection goes silent" do
+      before do
+        stub_const("OmniAI::Google::Live::Connection::PING_INTERVAL", 0.2)
+        stub_const("OmniAI::Google::Live::Connection::PONG_TIMEOUT", 0.3)
+      end
+
+      it "keeps a healthy idle session open with pings" do
+        session = open_session
+        sleep(1)
+        expect(session).to be_open
+      end
+    end
+
+    context "when the peer stops answering pings" do
+      let(:script) do
+        lambda do |connection, message|
+          if message.key?("setup")
+            connection.reply({ setupComplete: { sessionId: "session-1" } })
+            connection.stall!
+          end
+        end
+      end
+
+      before do
+        stub_const("OmniAI::Google::Live::Connection::PING_INTERVAL", 0.2)
+        stub_const("OmniAI::Google::Live::Connection::PONG_TIMEOUT", 0.3)
+      end
+
+      it "yields Closed once the pong is overdue" do
+        session = open_session
+        closed = collect_events(until_class: described_class::Event::Closed, timeout: 2).last
+        expect(closed).to be_a(described_class::Event::Closed)
+        expect(closed.error).to be_a(OmniAI::Google::Live::Connection::PongTimeout)
+        expect(session).not_to be_open
+      end
+    end
+  end
+
+  describe "TLS handshake" do
+    let(:silent) { TCPServer.new("127.0.0.1", 0) }
+    let(:client) do
+      OmniAI::Google::Client.new(project_id: "test-project", location_id: "us", credentials:,
+        host: "https://127.0.0.1:#{silent.addr[1]}", logger: Logger.new(log))
+    end
+    let(:accepted) { [] }
+
+    before do
+      stub_const("OmniAI::Google::Live::Connection::CONNECT_TIMEOUT", 0.3)
+      Thread.new { accepted << silent.accept }
+    end
+
+    after do
+      accepted.each(&:close)
+      silent.close
+    end
+
+    it "times out when the peer accepts TCP but never answers TLS" do
+      started = Time.now
+      expect { open_session }.to raise_error(described_class::TimeoutError, /connect timed out/)
+      expect(Time.now - started).to be < 1
     end
   end
 end

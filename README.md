@@ -493,8 +493,9 @@ session.close
 
 - **Threads:** each session has one socket and one reader thread. Events are yielded, and tools run, on that thread;
   `send_*` may be called from any thread. A send that blocks longer than `write_timeout:` (default 5 s) closes the
-  session and raises `Live::TimeoutError`. The session always ends with exactly one `Event::Closed`, including when the
-  socket drops or your handler raises (`event.error`).
+  session and raises `Live::TimeoutError`, as does a connect (TCP + TLS) slower than 10 s. An idle connection is pinged
+  every 15 s; with no answer in 10 s it is dropped, so a silently dead path still ends the session. The session always
+  ends with exactly one `Event::Closed`, including when the socket drops or your handler raises (`event.error`).
 - **Tools:** a raising tool answers the model with its error class only, and the session carries on.
 - **Limits (Google):** a connection lasts about 10 minutes, and an audio-only session 15 minutes without
   `compression:`. Measured live at `us` (2026-10-15): `GoAway` arrived at 9 min (`time_left` 30 s, not the 60 s
@@ -505,7 +506,8 @@ session.close
   so keep anything the model must remember in your own state and re-send it when needed. The gem does not reconnect: open a new session and re-seed it
   (`resumption:` takes Google's resumption handles if you prefer that).
 - **Privacy:** the gem never logs or raises audio, transcripts or tool arguments. `Live::Error#message` carries codes and
-  ids only; Google's close reason is on `#reason`, and `Event::Closed#inspect` leaves it out.
+  ids only; Google's close reason is on `#reason`, and `Event::Closed#inspect` leaves it out. A server frame that fails
+  to parse closes the session with a `Live::Error` naming only the exception class.
 
 ### Embed
 

@@ -107,7 +107,11 @@ module OmniAI
           on_close: method(:on_close)
         )
         log("LIVE connect #{host} #{@model}")
-        @connection.connect
+        begin
+          @connection.connect
+        rescue Connection::ConnectTimeout => e
+          raise TimeoutError, "#{self.class.name} #{e.message} (model=#{@model})"
+        end
         await_setup!
         self
       end
@@ -169,7 +173,7 @@ module OmniAI
 
       # @param data [String]
       def on_message(data)
-        message = JSON.parse(data)
+        message, events = decode(data)
         if (complete = message["setupComplete"])
           @session_id = complete["sessionId"]
           @state = :open
@@ -177,7 +181,7 @@ module OmniAI
           return
         end
 
-        events(message).each do |event|
+        events.each do |event|
           @handler&.call(event)
           respond(event) if event.is_a?(Event::ToolCall)
         end
@@ -214,6 +218,22 @@ module OmniAI
           { id: call.id, name: call.name, response: }
         end
         deliver(toolResponse: { functionResponses: responses })
+      end
+
+      # A frame that fails to parse or build closes the session with an error naming only the exception class: the
+      # original's message (and so its cause) can quote the frame, which may hold transcripts.
+      #
+      # @param data [String]
+      #
+      # @raise [Error]
+      #
+      # @return [Array(Hash, Array)] the message and its events
+      def decode(data)
+        message = JSON.parse(data)
+        [message, message["setupComplete"] ? [] : events(message)]
+      rescue StandardError => e
+        raise Error.new("#{self.class.name} could not decode a server message: #{e.class.name} " \
+          "(session=#{@session_id || '-'})"), cause: nil
       end
 
       # Server message keys and their event builders, in the order events are yielded (usage after content).
