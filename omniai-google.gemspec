@@ -31,5 +31,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "google-cloud-storage"
   spec.add_dependency "omniai", "~> 3.8"
   spec.add_dependency "openssl"
+  spec.add_dependency "websocket-driver"
   spec.add_dependency "zeitwerk"
 end
