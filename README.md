@@ -468,7 +468,7 @@ session.close
 - **Tools:** a raising tool answers the model with its error class only, and the session carries on.
 - **Limits (Google):** a connection lasts about 10 minutes, and an audio-only session 15 minutes without
   `compression:`. Measured live at `us` (2026-10-15): `GoAway` arrived at 9 min (`time_left` 30 s, not the 60 s
-  Google documents) and the server closed with 1000 at 9.5 min. Reconnect as soon as `GoAway` arrives.
+  Google documents) and the server closed with 1000 at 9.5 min. Reconnect when `GoAway` arrives, not on a timer: the documented numbers are off.
 - **Cost:** every turn re-bills the whole context. `compression:` bounds it: in a live test with a 10,000-token trigger
   and 5,000-token target, `promptTokenCount` dropped from about 8,500 to 3,400 whenever the next turn would pass the
   trigger (a sawtooth instead of linear growth; 51% fewer prompt tokens over 12 turns). The oldest turns are dropped,
