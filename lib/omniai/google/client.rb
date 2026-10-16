@@ -100,6 +100,17 @@ module OmniAI
         Transcribe.process!(input, model:, language:, format:, client: self)
       end
 
+      # Opens a Gemini Live session (Vertex only). See `OmniAI::Google::Live#initialize` for the options.
+      #
+      # @raise [OmniAI::Google::Live::Error]
+      #
+      # @yieldparam event [OmniAI::Google::Live::Event::*]
+      #
+      # @return [OmniAI::Google::Live]
+      def live(model: Live::DEFAULT_MODEL, **, &)
+        Live.open(client: self, model:, **, &)
+      end
+
       # @return [String]
       def path
         if @project_id && @location_id
