@@ -12,6 +12,7 @@ module OmniAI
       include TranscribeHelpers
 
       module Model
+        GEMINI_3_5_TRANSCRIBE = "gemini-3.5-transcribe"
         CHIRP_3 = "chirp_3"
         CHIRP_2 = "chirp_2"
         CHIRP = "chirp"
@@ -30,6 +31,22 @@ module OmniAI
       # @return [Context]
       CONTEXT = Context.build do |context|
         # No custom deserializers needed - let base class handle parsing
+      end
+
+      GEMINI_OPTIONS = %i[diarization word_timestamps vocabulary].freeze
+
+      # Gemini transcribe models (`gemini-*`) take a separate path; every Chirp / Speech-to-Text model is unchanged.
+      #
+      # @return [OmniAI::Transcribe::Transcription]
+      def self.process!(io, model:, **options)
+        return Gemini.process!(io, model:, **options) if Gemini.model?(model)
+
+        unsupported = options.keys & GEMINI_OPTIONS
+        if unsupported.any?
+          raise ArgumentError, "#{unsupported.join(', ')} only supported by Gemini transcribe models, not #{model}"
+        end
+
+        super
       end
 
       # @raise [HTTPError]

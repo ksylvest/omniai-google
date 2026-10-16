@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.20.0
+
+### Added
+
+- `gemini-3.5-transcribe` support in `Transcribe` (`Model::GEMINI_3_5_TRANSCRIBE`). Any `gemini-*` model is sent to Vertex `generateContent` at `global` or the `us`/`eu` multi-region (a zonal `location_id` maps to `us` by default). New options for these models only: `diarization:`, `word_timestamps:` and `vocabulary:`. `verbose_json` returns one segment per utterance with its speaker and word times. Chirp and the other Speech-to-Text models are unchanged, and passing the new options to them raises `ArgumentError`. Verified live at `us`: wav, m4a, Spanish, diarization, vocabulary, and a GCS upload over 10 MB. The README covers the experimental word timestamps, which dropped speech in live tests.
+
+### Fixed
+
+- `Embed` requested `https://<host>//v1/...` (doubled slash) because its path prefixed `/` to `client.path`, which already starts with one. Google tolerated it (verified live: 200), so embeddings worked, but the spec had pinned the wrong URL and broke under webmock 3.29. The path now matches `Chat`.
+
 ## 3.19.0
 
 ### Added

@@ -344,6 +344,36 @@ client.transcribe("audio.mp3", model: OmniAI::Google::Transcribe::Model::CHIRP) 
 
 [Google Speech-to-Text API Reference](https://cloud.google.com/speech-to-text/docs)
 
+#### Gemini Transcribe
+
+`gemini-3.5-transcribe` is a Gemini model served by Vertex `generateContent`, not Speech-to-Text, so it needs Vertex
+credentials. Pass it as the model; the Chirp models above are unaffected.
+
+```ruby
+transcription = client.transcribe("interview.wav", model: OmniAI::Google::Transcribe::Model::GEMINI_3_5_TRANSCRIBE)
+transcription.text
+
+# Speaker labels per utterance (experimental, up to 8 speakers)
+transcription = client.transcribe("interview.wav", model: "gemini-3.5-transcribe", diarization: true, format: "verbose_json")
+transcription.segments # => [{ "id" => 0, "text" => "...", "speaker" => "spk:0" }, ...]
+
+# Language hints and custom vocabulary (up to 1,000 terms); the language is auto-detected when omitted
+client.transcribe("interview.wav", model: "gemini-3.5-transcribe", language: "es-US", vocabulary: %w[ibuprofeno])
+
+# Word times (experimental, off by default; see the caveat below)
+client.transcribe("interview.wav", model: "gemini-3.5-transcribe", word_timestamps: true, format: "verbose_json")
+```
+
+- **Location:** served from `global` and the `us` / `eu` multi-regions, never a single region. A zonal `location_id`
+  maps to its multi-region (`us` by default, `eu` for `eu*` / `europe*`); `global` is kept.
+- **Input:** wav, mp3, flac, ogg, webm, m4a or aiff (detected from the bytes), or a `gs://` URI. Files over 10 MB are
+  uploaded to the `<project_id>-speech-audio` bucket and deleted afterwards.
+- **Length:** Google caps a file at 15 minutes when diarization or timestamps are on, so split longer recordings.
+- **Word timestamps can drop speech.** In live tests on a two-speaker, 8-second clip (2026-10-15), `word_timestamps: true`
+  returned only the first word of the answer, and with `diarization: true` as well it dropped the whole first utterance.
+  Google labels both features experimental and warns that word timestamps degrade accuracy. `diarization:` alone
+  returned the complete transcript but no times.
+
 #### GCS Setup for Transcription
 
 For transcription to work properly with automatic file uploads, you need to set up Google Cloud Storage and configure the appropriate permissions.
