@@ -57,6 +57,9 @@ module OmniAI
           @reader = Thread.new { read_loop }
           @reader.name = "omniai-google-live"
           @reader.report_on_exception = false
+        rescue StandardError
+          [@io, @wake_reader, @wake_writer].compact.each { |io| close_quietly(io) } unless @reader
+          raise
         end
 
         # @return [Boolean]
