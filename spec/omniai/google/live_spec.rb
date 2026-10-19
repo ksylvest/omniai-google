@@ -157,6 +157,25 @@ RSpec.describe OmniAI::Google::Live do
       end
     end
 
+    context "when the handshake fails to start" do
+      let(:pipes) { [] }
+
+      before do
+        allow(IO).to receive(:pipe).and_wrap_original do |pipe|
+          pipe.call.tap { |pair| pipes.concat(pair) }
+        end
+        allow(WebSocket::Driver).to receive(:client).and_wrap_original do |original, *args, **kwargs|
+          original.call(*args, **kwargs).tap { |driver| allow(driver).to receive(:start).and_raise(IOError, "boom") }
+        end
+      end
+
+      it "closes the wake pipe" do
+        expect { open_session }.to raise_error(IOError, "boom")
+        expect(pipes).not_to be_empty
+        expect(pipes).to all(be_closed)
+      end
+    end
+
     context "without credentials" do
       let(:client) { OmniAI::Google::Client.new(api_key: "fake", project_id: "test-project", location_id: "us") }
 
@@ -456,6 +475,28 @@ RSpec.describe OmniAI::Google::Live do
         expect(session).not_to be_open
         expect(collect_events(until_class: described_class::Event::Closed).last)
           .to be_a(described_class::Event::Closed)
+      end
+    end
+
+    context "when the server goes silent and the client closes" do
+      let(:script) do
+        lambda do |connection, message|
+          if message.key?("setup")
+            connection.reply({ setupComplete: { sessionId: "session-1" } })
+            connection.stall!
+          end
+        end
+      end
+
+      before { stub_const("OmniAI::Google::Live::Connection::CLOSE_TIMEOUT", 0.2) }
+
+      it "wakes the idle reader and yields Closed without waiting for a ping" do
+        session = open_session
+        started = Time.now
+        Thread.new { session.close }.join
+        expect(collect_events(until_class: described_class::Event::Closed, timeout: 1).last)
+          .to be_a(described_class::Event::Closed)
+        expect(Time.now - started).to be < 1
       end
     end
 
