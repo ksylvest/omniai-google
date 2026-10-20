@@ -19,6 +19,12 @@ module OmniAI
       #   @return [String, nil]
       attr_accessor :location_id
 
+      # @!attribute [rw] locations
+      #   Vertex location per model, e.g. `{ "gemini-3.8-flash" => "us" }`. When set, each request derives its host
+      #   from the model's location, and a model missing from the map raises `UnknownLocationError`.
+      #   @return [Hash{String => String}, nil]
+      attr_accessor :locations
+
       # @param api_key [String, nil] optional - defaults to `ENV['GOOGLE_API_KEY']`
       # @param project_id [String, nil] optional - defaults to `ENV['GOOGLE_PROJECT_ID']`
       # @param location_id [String, nil] optional - defaults to `ENV['GOOGLE_LOCATION_ID']`

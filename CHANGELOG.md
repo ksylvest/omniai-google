@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.22.0
+
+### Added
+
+- `config.locations` (or `Client.new(locations:)`): a Vertex location per model, e.g. `{ "gemini-3.8-flash" => "us", "gemini-2.5-flash" => "us-central1" }`. Chat (including streaming), Embed, Transcribe and Live derive the host from the model's location the way Google's SDKs do (`global` → `aiplatform.googleapis.com`, `us`/`eu` → `aiplatform.<loc>.rep.googleapis.com`, otherwise `<loc>-aiplatform.googleapis.com`). A mapped location is used as given, overriding the per-model defaults (Gemini transcribe's multi-region mapping, `chirp_2`'s `us-central1`, `chirp_3`'s `us`/`eu`).
+- A model missing from the map raises `OmniAI::Google::UnknownLocationError` (`#model` names it) before any request. Nothing falls back to the default host.
+- A client built with an explicit `host:` or `location_id:` ignores the map. With no map, requests are unchanged.
+
 ## 3.21.0
 
 ### Added

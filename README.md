@@ -58,6 +58,30 @@ OmniAI::Google.configure do |config|
 end
 ```
 
+#### Vertex Locations per Model
+
+No single Vertex location serves every model. To route each model to its own location, set `locations`; the host is
+derived from the location the way Google's SDKs do it (`global`, the `us` / `eu` multi-regions, or a single region):
+
+```ruby
+OmniAI::Google.configure do |config|
+  config.credentials = File.open("./credentials.json")
+  config.project_id = '...'
+  config.locations = {
+    'gemini-3.8-flash' => 'us',              # https://aiplatform.us.rep.googleapis.com
+    'gemini-2.5-flash' => 'us-central1',     # https://us-central1-aiplatform.googleapis.com
+    'gemini-embedding-001' => 'us-central1',
+    'chirp_3' => 'us',
+  }
+end
+```
+
+- Applies to chat (including streaming), embed, transcribe and live. A mapped location is used as given.
+- A model missing from the map raises `OmniAI::Google::UnknownLocationError` (with `#model`) before any request.
+  List every model you call, including any default you rely on (`Chat::DEFAULT_MODEL`, `Embed::DEFAULT_MODEL`,
+  `Transcribe::DEFAULT_MODEL`).
+- A client built with an explicit `host:` or `location_id:` ignores the map.
+
 **Note for Transcription**: When using transcription features, ensure your service account has the necessary permissions for Google Cloud Speech-to-Text API and Google Cloud Storage (for automatic file uploads). See the [GCS Setup](#gcs-setup-for-transcription) section below for detailed configuration.
 
 Credentials may be configured using:

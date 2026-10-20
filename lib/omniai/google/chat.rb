@@ -76,6 +76,11 @@ module OmniAI
         context.deserializers[:thinking] = ThinkingSerializer.method(:deserialize)
       end
 
+      # `client` is swapped for `client.for_model(model)`, so `locations` routes the request.
+      def initialize(prompt = nil, client:, model:, **, &)
+        super(prompt, client: client.for_model(model), model:, **, &)
+      end
+
     protected
 
       # @return [Context]

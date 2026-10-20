@@ -20,6 +20,10 @@ module OmniAI
     #
     #   client = OmniAI::Google::Client.new
     class Client < OmniAI::Client
+      # Marks `host` / `location_id` as not passed, so an explicit value can take precedence over `locations`.
+      UNSET = Object.new.freeze
+      private_constant :UNSET
+
       # @!attribute [rw] version
       #   @return [String, nil]
       attr_accessor :version
@@ -32,26 +36,54 @@ module OmniAI
       # @param version [String] default is `OmniAI::Google.config.version`
       # @param logger [Logger] default is `OmniAI::Google.config.logger`
       # @param timeout [Integer] default is `OmniAI::Google.config.timeout`
+      # @param locations [Hash{String => String}, nil] default is `OmniAI::Google.config.locations`; ignored when
+      #   `host` or `location_id` is passed
       def initialize(
         api_key: OmniAI::Google.config.api_key,
         project_id: OmniAI::Google.config.project_id,
-        location_id: OmniAI::Google.config.location_id,
+        location_id: UNSET,
         credentials: OmniAI::Google.config.credentials,
         logger: OmniAI::Google.config.logger,
-        host: OmniAI::Google.config.host,
+        host: UNSET,
         version: nil,
-        timeout: OmniAI::Google.config.timeout
+        timeout: OmniAI::Google.config.timeout,
+        locations: OmniAI::Google.config.locations
       )
         if api_key.nil? && credentials.nil?
           raise(ArgumentError, "either an `api_key` or `credentials` must be provided")
         end
+
+        pinned = !(UNSET.equal?(host) && UNSET.equal?(location_id))
+        @locations = locations unless pinned
+        host = OmniAI::Google.config.host if UNSET.equal?(host)
+        location_id = OmniAI::Google.config.location_id if UNSET.equal?(location_id)
 
         super(api_key:, host:, logger:, timeout:)
 
         @project_id = project_id
         @location_id = location_id
         @credentials = Credentials.parse(credentials)
+        @version_override = version
         @version = version || default_version
+      end
+
+      # A copy of this client pointed at the model's location in `locations`, or this client when no map applies.
+      #
+      # @param model [String]
+      #
+      # @raise [UnknownLocationError] when the map has no entry for the model
+      #
+      # @return [Client]
+      def for_model(model)
+        return self if @locations.nil?
+
+        location_id = @locations.fetch(model) { raise UnknownLocationError, model }
+        dup.tap { |client| client.locate!(location_id) }
+      end
+
+      # @return [Boolean] true for a client returned by `#for_model`
+      def located?
+        @located || false
       end
 
       # @raise [OmniAI::Error]
@@ -153,6 +185,16 @@ module OmniAI
         VERTEX_HOSTNAME.match?(hostname.downcase)
       rescue URI::InvalidURIError
         false
+      end
+
+    protected
+
+      # @param location_id [String]
+      def locate!(location_id)
+        @location_id = location_id
+        @host = Vertex.host(location_id)
+        @version = @version_override || Config::Version::STABLE
+        @located = true
       end
 
     private
