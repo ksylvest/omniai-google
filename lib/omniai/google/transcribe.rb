@@ -49,6 +49,11 @@ module OmniAI
         super
       end
 
+      # `client` is swapped for `client.for_model(model)`, so `locations` routes the request.
+      def initialize(io, client:, model:, **)
+        super(io, client: client.for_model(model), model:, **)
+      end
+
       # @raise [HTTPError]
       #
       # @return [OmniAI::Transcribe::Transcription]

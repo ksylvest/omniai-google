@@ -54,7 +54,7 @@ module OmniAI
         def initialize(io, client:, model:, language: nil, format: nil, diarization: false, word_timestamps: false,
           vocabulary: nil)
           @io = io
-          @client = client
+          @client = client.for_model(model)
           @model = model
           @language = language
           @format = format || OmniAI::Transcribe::Format::JSON
@@ -92,8 +92,12 @@ module OmniAI
         # Served from the global endpoint and the us/eu multi-regions, never a single region, so a zonal Vertex
         # location_id maps to its multi-region (same rule as Chirp 3); `us` is the default.
         #
-        # @return [String] "global", "us" or "eu"
+        # A location from `locations` is used as given.
+        #
+        # @return [String] "global", "us" or "eu", unless mapped
         def gemini_location_id
+          return @client.instance_variable_get(:@location_id) if @client.located?
+
           case @client.instance_variable_get(:@location_id)
           when "global" then "global"
           when /\A(eu|europe)/i then "eu"
@@ -103,8 +107,7 @@ module OmniAI
 
         # @return [String]
         def host
-          location = gemini_location_id
-          location == "global" ? "https://aiplatform.googleapis.com" : "https://aiplatform.#{location}.rep.googleapis.com"
+          Vertex.host(gemini_location_id)
         end
 
         # @return [String]

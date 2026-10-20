@@ -72,6 +72,11 @@ module OmniAI
         context.deserializers[:usage] = USAGE_METADATA_DESERIALIZER
       end
 
+      # `client` is swapped for `client.for_model(model)`, so `locations` routes the request.
+      def initialize(input, client:, model:, **)
+        super(input, client: client.for_model(model), model:, **)
+      end
+
     protected
 
       # Determines which endpoint to use based on client and model configuration.

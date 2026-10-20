@@ -12,8 +12,12 @@ module OmniAI
           raise(ArgumentError, "project_id is required for transcription")
       end
 
+      # A location from `locations` is used as given; otherwise it is derived per model.
+      #
       # @return [String]
       def location_id
+        return @client.instance_variable_get(:@location_id) if @client.located?
+
         case @model
         when "chirp_2"
           "us-central1"

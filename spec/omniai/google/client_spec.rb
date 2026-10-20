@@ -31,6 +31,35 @@ RSpec.describe OmniAI::Google::Client do
     end
   end
 
+  describe "#for_model" do
+    let(:options) { { api_key: "fake", project_id: "test-project", locations: { "gemini-3.8-flash" => "us" } } }
+
+    it "points a copy at the mapped location" do
+      located = client.for_model("gemini-3.8-flash")
+      expect(located.path).to eql("/v1/projects/test-project/locations/us/publishers/google")
+      expect(located).to be_vertex
+      expect(client).not_to be_located
+    end
+
+    context "without locations" do
+      let(:options) { { api_key: "fake" } }
+
+      it { expect(client.for_model("gemini-3.8-flash")).to equal(client) }
+    end
+
+    context "with an explicit location_id" do
+      let(:options) { super().merge(location_id: "us-east4") }
+
+      it { expect(client.for_model("gemini-2.5-flash")).to equal(client) }
+    end
+
+    context "with an explicit version" do
+      let(:options) { super().merge(version: "v1beta1") }
+
+      it { expect(client.for_model("gemini-3.8-flash").version).to eql("v1beta1") }
+    end
+  end
+
   describe "#path" do
     context "without options" do
       it "returns the path" do

@@ -478,6 +478,7 @@ RSpec.describe OmniAI::Google::Transcribe do
       let(:client) do
         instance_double(OmniAI::Google::Client).tap do |client|
           allow(client).to receive_messages(api_key: nil, credentials?: true)
+          allow(client).to receive(:for_model).and_return(client)
         end
       end
 

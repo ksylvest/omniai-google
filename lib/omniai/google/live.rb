@@ -76,7 +76,7 @@ module OmniAI
       # @yieldparam event [Live::Event::*]
       def initialize(client:, model: DEFAULT_MODEL, system: nil, tools: nil, tool_behavior: :blocking, voice: nil,
         transcription: true, vad: nil, compression: false, resumption: nil, write_timeout: WRITE_TIMEOUT, &handler)
-        @client = client
+        @client = client.for_model(model)
         @model = model
         @system = system
         @tools = tools || []
