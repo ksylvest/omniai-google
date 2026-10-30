@@ -41,6 +41,13 @@ RSpec.describe OmniAI::Google::Embed do
       it { expect(process!.embedding).to eql([0.0]) }
     end
 
+    context "with gemini-embedding-2" do
+      let(:model) { described_class::Model::GEMINI_EMBEDDING_2 }
+
+      it { expect(process!).to be_a(OmniAI::Embed::Response) }
+      it { expect(process!.embedding).to eql([0.0]) }
+    end
+
     context "with text-embedding-005" do
       let(:model) { described_class::Model::TEXT_EMBEDDING_005 }
 
@@ -124,6 +131,39 @@ RSpec.describe OmniAI::Google::Embed do
 
       it "takes the vertex predict branch" do
         expect(process!.embedding).to eql([0.0])
+      end
+    end
+
+    context "with vertex gemini-embedding-2 on the multi-region endpoint" do
+      let(:client) do
+        OmniAI::Google::Client.new(
+          credentials:,
+          host: "https://aiplatform.us.rep.googleapis.com",
+          project_id: "test-project",
+          location_id: "us"
+        )
+      end
+
+      let(:credentials) do
+        instance_double(Google::Auth::ServiceAccountCredentials, fetch_access_token!: nil, access_token: "token")
+      end
+
+      let(:model) { described_class::Model::GEMINI_EMBEDDING_2 }
+
+      before do
+        stub_request(:post, "https://aiplatform.us.rep.googleapis.com/v1/projects/test-project/locations/us/publishers/google/models/#{model}:embedContent")
+          .with(body: {
+            content: { parts: [{ text: }] },
+          })
+          .to_return_json(body: {
+            embedding: { values: [0.0] },
+            usageMetadata: { promptTokenCount: 5, totalTokenCount: 5 },
+          })
+      end
+
+      it "takes the vertex embedContent branch" do
+        expect(process!.embedding).to eql([0.0])
+        expect(process!.usage.total_tokens).to be(5)
       end
     end
 
