@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.23.0
+
+### Added
+
+- `Embed::Model::GEMINI_EMBEDDING_2` (`gemini-embedding-2`), the GA release of `gemini-embedding-2-preview` (GA 2026-04-22). Like the preview, Vertex calls go to `embedContent`. Vertex serves it at `global`, `us` and `eu` only, so a client on a single region such as `us-central1` needs a `config.locations` entry for it. The default model is unchanged.
+
 ## 3.22.0
 
 ### Added

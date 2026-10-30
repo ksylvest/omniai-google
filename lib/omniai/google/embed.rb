@@ -15,7 +15,10 @@ module OmniAI
         TEXT_EMBEDDING_005 = "text-embedding-005"
         TEXT_MULTILINGUAL_EMBEDDING_002 = "text-multilingual-embedding-002"
         GEMINI_EMBEDDING_001 = "gemini-embedding-001"
+        # Preview of GEMINI_EMBEDDING_2.
         GEMINI_EMBEDDING_2_PREVIEW = "gemini-embedding-2-preview"
+        # Vertex serves it at global, us and eu only.
+        GEMINI_EMBEDDING_2 = "gemini-embedding-2"
         EMBEDDING = TEXT_EMBEDDING_004
         MULTILINGUAL_EMBEDDING = TEXT_MULTILINGUAL_EMBEDDING_002
       end
