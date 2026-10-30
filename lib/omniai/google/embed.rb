@@ -83,7 +83,7 @@ module OmniAI
     protected
 
       # Determines which endpoint to use based on client and model configuration.
-      # Routes gemini-embedding-2-* models to embedContent on Vertex, as Google's
+      # Routes gemini-embedding-2* models to embedContent on Vertex, as Google's
       # Vertex AI requires this endpoint for newer multimodal embedding models.
       #
       # @return [Symbol] :embed_content, :predict, or :batch_embed_contents
@@ -116,7 +116,7 @@ module OmniAI
         end
       end
 
-      # Builds payload for the Vertex embedContent endpoint (gemini-embedding-2-* models).
+      # Builds payload for the Vertex embedContent endpoint (gemini-embedding-2* models).
       # @return [Hash]
       def embed_content_payload
         raise ArgumentError, "embedContent does not support batch input" if @input.is_a?(Array) && @input.length > 1
