@@ -13,7 +13,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.9.0)
+    addressable (2.9.2)
       public_suffix (>= 2.0.2, < 8.0)
     ast (2.4.3)
     base64 (0.3.0)
@@ -66,8 +66,8 @@ GEM
       google-cloud-core (~> 1.6)
       googleauth (~> 1.9)
       mini_mime (~> 1.0)
-    google-logging-utils (0.2.1)
-    googleauth (1.17.6)
+    google-logging-utils (0.2.2)
+    googleauth (1.17.7)
       faraday (>= 1.0, < 3.a)
       google-cloud-env (~> 2.2)
       google-logging-utils (~> 0.1)
@@ -177,7 +177,7 @@ GEM
       regexp_parser (>= 2.0)
       rubocop (~> 1.86, >= 1.86.2)
     ruby-progressbar (1.13.0)
-    signet (0.22.1)
+    signet (0.22.2)
       addressable (~> 2.8)
       faraday (>= 0.17.5, < 3.a)
       jwt (>= 1.5, < 4.0)
