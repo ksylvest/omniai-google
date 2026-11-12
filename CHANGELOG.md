@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.24.0
+
+### Added
+
+- `Model::GEMINI_4_HYDROGEN` (`"gemini-4-hydrogen"`, GA 2026-11-12) and `Model::GEMINI_4_CARBON` (`"gemini-4-carbon"`). Both verified live on Vertex at the `us` multi-region (text, usage, streaming, `thinking: { effort: }`). `GEMINI_FLASH`, `GEMINI_PRO` and `DEFAULT_MODEL` are unchanged.
+
+  Hydrogen is Google's upgrade path from 3.8 Flash. It accepts `thinking: { effort: "xhigh" }` (sent as `XHIGH`; Carbon and Argon 400 on it) and defaults to `high`, not `medium`. `MINIMAL` and `thinkingBudget` 400; `temperature` / `top_p` / `top_k` are ignored. Input, thinking and output share one 1,048,576-token window.
+
 ## 3.23.0
 
 ### Added
