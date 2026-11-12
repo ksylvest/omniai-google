@@ -18,6 +18,18 @@ RSpec.describe OmniAI::Google::Chat do
       expect(described_class::Model::GEMINI_4_ARGON).to eq("gemini-4-argon")
     end
 
+    it "has GEMINI_4_CARBON" do
+      expect(described_class::Model::GEMINI_4_CARBON).to eq("gemini-4-carbon")
+    end
+
+    it "has GEMINI_4_HYDROGEN" do
+      expect(described_class::Model::GEMINI_4_HYDROGEN).to eq("gemini-4-hydrogen")
+    end
+
+    it "keeps GEMINI_FLASH on gemini-3.8-flash" do
+      expect(described_class::Model::GEMINI_FLASH).to eq("gemini-3.8-flash")
+    end
+
     it "keeps GEMINI_PRO on gemini-3.1-pro-preview" do
       expect(described_class::Model::GEMINI_PRO).to eq("gemini-3.1-pro-preview")
     end
@@ -337,6 +349,32 @@ RSpec.describe OmniAI::Google::Chat do
         stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
           .with(body: {
             generationConfig: { thinkingConfig: { includeThoughts: true, thinkingLevel: "MEDIUM" } },
+            contents: [
+              { role: "user", parts: [{ text: "Tell me a joke!" }] },
+            ],
+          })
+          .to_return_json(body: {
+            candidates: [{
+              content: {
+                role: "assistant",
+                parts: [{ text: "Two elephants fall off a cliff. Boom! Boom!" }],
+              },
+            }],
+          })
+      end
+
+      it { expect(completion.text).to eql("Two elephants fall off a cliff. Boom! Boom!") }
+    end
+
+    context "with thinking: { effort: 'xhigh' } option" do
+      subject(:completion) { described_class.process!(prompt, client:, model:, thinking: { effort: "xhigh" }) }
+
+      let(:prompt) { "Tell me a joke!" }
+
+      before do
+        stub_request(:post, "https://generativelanguage.googleapis.com/v1beta/models/#{model}:generateContent?key=...")
+          .with(body: {
+            generationConfig: { thinkingConfig: { includeThoughts: true, thinkingLevel: "XHIGH" } },
             contents: [
               { role: "user", parts: [{ text: "Tell me a joke!" }] },
             ],

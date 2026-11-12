@@ -27,6 +27,8 @@ module OmniAI
         GEMINI_3_7_FLASH = "gemini-3.7-flash"
         GEMINI_3_8_FLASH = "gemini-3.8-flash"
         GEMINI_4_ARGON = "gemini-4-argon"
+        GEMINI_4_CARBON = "gemini-4-carbon"
+        GEMINI_4_HYDROGEN = "gemini-4-hydrogen"
         GEMINI_PRO = GEMINI_3_1_PRO
         GEMINI_FLASH = GEMINI_3_8_FLASH
       end
