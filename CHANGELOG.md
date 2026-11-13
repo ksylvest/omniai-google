@@ -4,9 +4,17 @@
 
 ### Added
 
-- `Model::GEMINI_4_HYDROGEN` (`"gemini-4-hydrogen"`, GA 2026-11-12) and `Model::GEMINI_4_CARBON` (`"gemini-4-carbon"`). Both verified live on Vertex at the `us` multi-region (text, usage, streaming, `thinking: { effort: }`). `GEMINI_FLASH`, `GEMINI_PRO` and `DEFAULT_MODEL` are unchanged.
+- `Model::GEMINI_4_HYDROGEN` (`"gemini-4-hydrogen"`, GA 2026-11-12) and `Model::GEMINI_4_CARBON` (`"gemini-4-carbon"`). `GEMINI_FLASH`, `GEMINI_PRO` and `DEFAULT_MODEL` are unchanged.
 
-  Hydrogen is Google's upgrade path from 3.8 Flash. It accepts `thinking: { effort: "xhigh" }` (sent as `XHIGH`; Carbon and Argon 400 on it) and defaults to `high`, not `medium`. `MINIMAL` and `thinkingBudget` 400; `temperature` / `top_p` / `top_k` are ignored. Input, thinking and output share one 1,048,576-token window.
+  Verified live on Vertex at the `us` multi-region (2026-11-12):
+  - Hydrogen: text, usage, streaming, `thinking: { effort: }` low / default / `xhigh`, and tool-call round trips (one call, and three parallel calls). Parallel calls carry one `thoughtSignature`, on the first call only; it is returned unchanged on that call and its `functionResponse`, and Hydrogen accepts it.
+  - Carbon: text and usage. `effort: "xhigh"` returns 400 (`Thinking level is unsupported`), and so does Argon (also tested live).
+
+  Google's migration notes for Hydrogen (from 3.8 Flash):
+  - It accepts `thinking: { effort: "xhigh" }` (sent as `XHIGH`) and defaults to `high`, not `medium`. Carbon and Argon cap at `high`. `MINIMAL` and `thinkingBudget` return 400.
+  - `max_tokens` caps thinking plus answer, and input, thinking and output share one 1,048,576-token window. One synchronous request returns at most 65,536 tokens; this gem doesn't do long-decode continuation.
+  - Explicit caching (`cachedContents`) is unsupported. Implicit caching applies to prompts of at least 4,096 tokens.
+  - `temperature` / `top_p` / `top_k` are ignored.
 
 ## 3.23.0
 
