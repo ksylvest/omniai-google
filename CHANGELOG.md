@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.26.0
+
+### Added
+
+- Explicit context caching. `client.caches` creates, gets, updates and deletes `cachedContents`, and `chat(cached_content:)` sends a request against one. `chat(cache: :system | true | { ttl:, scope: })` creates and reuses caches itself, with `config.cache_store` and `config.cache_wait`. Off by default; see the README.
+
+  Verified on Vertex `us` with raw HTTP before this release (2026-11-23): create, get, TTL patch and delete; a cached request with a second user turn; and 400s for a system instruction sent with a cache, a cache under 4,096 tokens, and `gemini-4-hydrogen`.
+
 ## 3.25.0
 
 ### Added

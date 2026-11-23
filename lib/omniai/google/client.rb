@@ -81,6 +81,45 @@ module OmniAI
         dup.tap { |client| client.locate!(location_id) }
       end
 
+      # A copy of this client pointed at a cache's location in `locations` mode, or this client otherwise.
+      #
+      # @param name [String] e.g. "projects/P/locations/us/cachedContents/123"
+      #
+      # @return [Client]
+      def for_cache(name)
+        return self if @locations.nil?
+
+        location_id = Cache.location_id(name) || raise(ArgumentError, "no location in cache name=#{name.inspect}")
+        dup.tap { |client| client.locate!(location_id) }
+      end
+
+      # @return [String, nil]
+      attr_reader :location_id
+
+      # @return [Caches] create, get and delete explicit context caches
+      def caches
+        Caches.new(client: self)
+      end
+
+      # @return [String, nil] e.g. "projects/P/locations/us" on Vertex, nil on the Gemini API
+      def parent
+        "projects/#{@project_id}/locations/#{@location_id}" if @project_id && @location_id
+      end
+
+      # @param model [String]
+      #
+      # @return [String] the model's resource name, as `cachedContents` expects it
+      def model_name(model)
+        parent ? "#{parent}/publishers/google/models/#{model}" : "models/#{model}"
+      end
+
+      # @param name [String, nil] a cache name; nil for the collection
+      #
+      # @return [String]
+      def cache_path(name = nil)
+        "/#{@version}/#{name || [parent, 'cachedContents'].compact.join('/')}"
+      end
+
       # @return [Boolean] true for a client returned by `#for_model`
       def located?
         @located || false
