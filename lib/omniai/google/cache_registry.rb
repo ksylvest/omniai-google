@@ -58,10 +58,12 @@ module OmniAI
       end
 
       # Starts the block on a thread unless one is already running for the key; either way returns that thread.
+      # A thread inherited across a fork is dead and its `ensure` never runs in the child, so it is replaced.
       #
       # @return [Thread]
       def background(key, &block)
         @mutex.synchronize do
+          @pending.delete(key) unless @pending[key]&.alive?
           @pending[key] ||= Thread.new do
             block.call
           ensure

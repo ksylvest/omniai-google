@@ -217,7 +217,7 @@ client.chat("What are the prime factors of 1234567?", model: OmniAI::Google::Cha
 
 Explicit context caching (`cachedContents`) is opt-in. Cached input tokens are billed at a discount, but a cache must hold at least 4,096 tokens, not every model supports it (the Gemini 4 models don't yet), and storage is billed per hour while it lives. The gem's default TTL is 300 seconds, not Google's 60 minutes.
 
-Manage a cache yourself with `client.caches`, and pass it (or its name) as `cached_content:`. A cached request can't send a system message, tools or a tool config: those live in the cache, and the prompt holds only what follows it. Tools passed to `chat` still run locally.
+Manage a cache yourself with `client.caches`, and pass it (or its name) as `cached_content:`. A `Cache` is checked against the request's model, location and tools; a name can only be checked against the location. A cached request can't send a system message, tools or a tool config: those live in the cache, and the prompt holds only what follows it. Tools passed to `chat` still run locally.
 
 ```ruby
 cache = client.caches.create(model: "gemini-3.8-flash", ttl: 600, tools: [weather]) do |prompt|
@@ -238,9 +238,9 @@ client.chat(prompt, cache: { ttl: 600 }) # as `true`, with a TTL (seconds)
 client.chat(prompt, cache: { ttl: 600, scope: :system }) # as `:system`, with a TTL
 ```
 
-Caches are keyed on the model, location and cached content, and kept in `config.cache_store` (per process by default; set it to `Rails.cache` or similar to share caches across processes). A cache's TTL is extended when it's used with less than half left. The chat falls back to an uncached request when the create fails, when it takes longer than `config.cache_wait` (default 10 seconds; the create carries on in the background), or when the cache is gone (404, `NOT_FOUND` or `FAILED_PRECONDITION`, retried once). A tool-call loop reuses the first round's cache.
+Caches are keyed on the model, location and cached content, and kept in `config.cache_store` (per process by default; set it to `Rails.cache` or similar to share caches across processes). Only one create per key runs at a time within a process; with a shared store, processes that miss at the same time each create a cache, and the extras are billed until their TTL ends. A cache's TTL is extended when it's used with less than half left. The chat falls back to an uncached request when the create fails, when it takes longer than `config.cache_wait` (default 10 seconds; the create carries on in the background), or when the cache is gone (404, `NOT_FOUND` or `FAILED_PRECONDITION`, retried once). A tool-call loop reuses the first round's cache.
 
-Any change to the cached part is a new cache, so put what varies (per-request values, earlier turns that change) after it, and keep data you can't store with Google, such as PHI under your agreements, out of it. Cached tokens are reported in `usageMetadata.cachedContentTokenCount`:
+Any change to the cached part is a new cache, so put what varies (per-request values, earlier turns that change) after it. The cached part is stored by Google for the TTL: with `cache: true` that is every message before the last one. Keeping data you can't store with Google, such as PHI under your agreements, out of it is the caller's job. Cached tokens are reported in `usageMetadata.cachedContentTokenCount`:
 
 ```ruby
 response.response_chain.sum { |r| r.data.dig("usageMetadata", "cachedContentTokenCount").to_i }
