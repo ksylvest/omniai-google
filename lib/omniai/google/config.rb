@@ -25,6 +25,17 @@ module OmniAI
       #   @return [Hash{String => String}, nil]
       attr_accessor :locations
 
+      # @!attribute [rw] cache_wait
+      #   Seconds a chat with `cache:` waits for a cache create before sending uncached. The create carries on in the
+      #   background either way.
+      #   @return [Numeric]
+      attr_accessor :cache_wait
+
+      # @!attribute [w] cache_store
+      #   Where `cache:` keeps cache names: anything with `read`, `write(key, value, expires_in:)` and `delete`
+      #   (e.g. `Rails.cache`, so processes share caches). Defaults to a per-process store.
+      attr_writer :cache_store
+
       # @param api_key [String, nil] optional - defaults to `ENV['GOOGLE_API_KEY']`
       # @param project_id [String, nil] optional - defaults to `ENV['GOOGLE_PROJECT_ID']`
       # @param location_id [String, nil] optional - defaults to `ENV['GOOGLE_LOCATION_ID']`
@@ -43,6 +54,12 @@ module OmniAI
         super(api_key:, host:, logger:, timeout:)
         @project_id = project_id
         @location_id = location_id
+        @cache_wait = 10
+      end
+
+      # @return [#read, #write, #delete]
+      def cache_store
+        @cache_store ||= CacheStore.new
       end
 
       # @return [String]

@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
+require "digest"
 require "googleauth"
+require "json"
+require "time"
 require "event_stream_parser"
 require "omniai"
 require "zeitwerk"
