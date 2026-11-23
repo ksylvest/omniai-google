@@ -26,6 +26,10 @@ RSpec.describe OmniAI::Google::Chat do
       expect(described_class::Model::GEMINI_4_HYDROGEN).to eq("gemini-4-hydrogen")
     end
 
+    it "has GEMINI_4_NEON" do
+      expect(described_class::Model::GEMINI_4_NEON).to eq("gemini-4-neon")
+    end
+
     it "keeps GEMINI_FLASH on gemini-3.8-flash" do
       expect(described_class::Model::GEMINI_FLASH).to eq("gemini-3.8-flash")
     end
