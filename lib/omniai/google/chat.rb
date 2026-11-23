@@ -29,6 +29,7 @@ module OmniAI
         GEMINI_4_ARGON = "gemini-4-argon"
         GEMINI_4_CARBON = "gemini-4-carbon"
         GEMINI_4_HYDROGEN = "gemini-4-hydrogen"
+        GEMINI_4_NEON = "gemini-4-neon"
         GEMINI_PRO = GEMINI_3_1_PRO
         GEMINI_FLASH = GEMINI_3_8_FLASH
       end

@@ -1,5 +1,13 @@
 # Changelog
 
+## 3.25.0
+
+### Added
+
+- `Model::GEMINI_4_NEON` (`"gemini-4-neon"`, GA 2026-11-18). `GEMINI_FLASH`, `GEMINI_PRO` and `DEFAULT_MODEL` are unchanged.
+
+  Google's notes match Hydrogen's (see 3.24.0): thinking levels `low` / `medium` / `high` (default) / `xhigh`, with `MINIMAL` and `thinkingBudget` returning 400. One 1,048,576-token window shared by input and output, at most 65,536 output tokens per synchronous request, implicit caching only (≥4,096 tokens), and `temperature` / `top_p` / `top_k` ignored. On Vertex it is served at `global`, `us` and `eu` only, and Google limits it to verified enterprise customers.
+
 ## 3.24.0
 
 ### Added
