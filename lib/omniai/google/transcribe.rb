@@ -76,7 +76,13 @@ module OmniAI
       #
       # @param max_wait [Numeric, nil] optional - seconds to wait for a batch operation; defaults to an estimate from
       #   the file size (600 to 10,800 seconds)
+      #
+      # @raise [ArgumentError] when `max_wait` isn't a positive number
       def initialize(io, client:, model:, max_wait: nil, **)
+        unless max_wait.nil? || (max_wait.is_a?(Numeric) && max_wait.positive?)
+          raise ArgumentError, "max_wait must be a positive number of seconds, got #{max_wait.inspect}"
+        end
+
         super(io, client: client.for_model(model), model:, **)
         @max_wait = max_wait
       end

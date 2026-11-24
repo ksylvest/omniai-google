@@ -74,6 +74,13 @@ RSpec.describe OmniAI::Google::Transcribe, "max_wait" do # rubocop:disable RSpec
     end
   end
 
+  [0, -5, "1800"].each do |value|
+    it "rejects max_wait=#{value.inspect}" do
+      expect { client.transcribe("gs://bucket/a.wav", model: "latest_long", max_wait: value) }
+        .to raise_error(ArgumentError, /max_wait must be a positive number/)
+    end
+  end
+
   it "is rejected by Gemini transcribe models" do
     expect { client.transcribe("gs://bucket/a.wav", model: "gemini-3.5-transcribe", max_wait: 30) }
       .to raise_error(ArgumentError, /max_wait/)
