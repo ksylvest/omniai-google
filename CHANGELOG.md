@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.27.0
+
+### Added
+
+- `client.transcribe(..., max_wait:)`: seconds to wait for a Speech-to-Text batch operation. The default is unchanged (an estimate from the file size, 600 to 10,800 seconds), which gave up on short files that Google took more than 600 s to finish. Not supported by Gemini transcribe models (`ArgumentError`).
+- Speech-to-Text transcriptions are an `OmniAI::Google::Transcribe::Transcription`, adding `operation_name` (batch only) and `billed_duration` (Google's `totalBilledDuration`, in seconds).
+
+### Changed
+
+- A batch operation that isn't done in time raises `OmniAI::Google::Transcribe::TimeoutError` (with `operation_name` and `wait`) instead of a bare `StandardError`. It is an `OmniAI::Error`, so `rescue OmniAI::Error` now catches it.
+
 ## 3.26.0
 
 ### Added
