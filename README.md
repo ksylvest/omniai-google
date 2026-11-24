@@ -401,6 +401,16 @@ client.transcribe("audio.mp3", model: OmniAI::Google::Transcribe::Model::CHIRP) 
 - Clear error messages for common issues
 - Graceful handling of network timeouts
 
+#### Batch Wait
+
+A batch operation is polled every 15 seconds for an estimate from the file size (600 to 10,800 seconds). Google's queue time doesn't scale with audio length, so pass `max_wait:` (seconds) to wait longer. Past it, `OmniAI::Google::Transcribe::TimeoutError` (an `OmniAI::Error`) is raised with the `operation_name` and `wait`; Google may still finish and bill the operation.
+
+```ruby
+transcription = client.transcribe("gs://bucket/audio.wav", model: "chirp_3", max_wait: 1800)
+transcription.operation_name # => "projects/.../operations/..." (nil for a sync request)
+transcription.billed_duration # => 300.0 (seconds Google billed; nil when not reported)
+```
+
 [Google Speech-to-Text API Reference](https://cloud.google.com/speech-to-text/docs)
 
 #### Gemini Transcribe

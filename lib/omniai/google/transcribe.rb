@@ -11,6 +11,25 @@ module OmniAI
     class Transcribe < OmniAI::Transcribe
       include TranscribeHelpers
 
+      # Raised when a batch operation isn't done within `max_wait`. Google may still finish (and bill) it.
+      class TimeoutError < OmniAI::Error
+        # @!attribute [r] operation_name
+        #   @return [String]
+        attr_reader :operation_name
+
+        # @!attribute [r] wait
+        #   @return [Numeric] seconds
+        attr_reader :wait
+
+        # @param operation_name [String]
+        # @param wait [Numeric] seconds
+        def initialize(operation_name:, wait:)
+          super("operation=#{operation_name} not done after #{wait}s")
+          @operation_name = operation_name
+          @wait = wait
+        end
+      end
+
       module Model
         GEMINI_3_5_TRANSCRIBE = "gemini-3.5-transcribe"
         CHIRP_3 = "chirp_3"
@@ -39,7 +58,11 @@ module OmniAI
       #
       # @return [OmniAI::Transcribe::Transcription]
       def self.process!(io, model:, **options)
-        return Gemini.process!(io, model:, **options) if Gemini.model?(model)
+        if Gemini.model?(model)
+          raise ArgumentError, "max_wait is not supported by Gemini transcribe models" if options.key?(:max_wait)
+
+          return Gemini.process!(io, model:, **options)
+        end
 
         unsupported = options.keys & GEMINI_OPTIONS
         if unsupported.any?
@@ -50,8 +73,12 @@ module OmniAI
       end
 
       # `client` is swapped for `client.for_model(model)`, so `locations` routes the request.
-      def initialize(io, client:, model:, **)
+      #
+      # @param max_wait [Numeric, nil] optional - seconds to wait for a batch operation; defaults to an estimate from
+      #   the file size (600 to 10,800 seconds)
+      def initialize(io, client:, model:, max_wait: nil, **)
         super(io, client: client.for_model(model), model:, **)
+        @max_wait = max_wait
       end
 
       # @raise [HTTPError]
@@ -84,7 +111,9 @@ module OmniAI
         transcript = data.dig("results", 0, "alternatives", 0, "transcript") || ""
 
         transformed_data = build_sync_response_data(data, transcript)
-        Transcription.parse(model: @model, format: @format, data: transformed_data)
+        Transcription.parse(model: @model, format: @format, data: transformed_data).tap do |transcription|
+          transcription.billed_duration = parse_duration(data.dig("metadata", "totalBilledDuration"))
+        end
       end
 
       # @raise [HTTPError]
@@ -107,7 +136,11 @@ module OmniAI
         # Extract transcript from completed operation
         transcript_data = extract_batch_transcript(result)
 
-        Transcription.parse(model: @model, format: @format, data: transcript_data)
+        Transcription.parse(model: @model, format: @format, data: transcript_data).tap do |transcription|
+          transcription.operation_name = operation_name
+          file_result = (result.dig("response", "results") || {}).values.first
+          transcription.billed_duration = parse_duration(file_result&.dig("metadata", "totalBilledDuration"))
+        end
       ensure
         # Delete our upload even when the request fails or polling times out
         cleanup_gcs_file(@uploaded_gcs_uri) if @uploaded_gcs_uri

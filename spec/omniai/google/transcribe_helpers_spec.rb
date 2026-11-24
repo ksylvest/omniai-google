@@ -570,15 +570,20 @@ RSpec.describe OmniAI::Google::TranscribeHelpers do
     end
   end
 
-  describe "#calculate_max_polling_attempts" do
+  describe "#max_wait" do
     it "waits at least 600 seconds for short audio" do
       allow(transcribe).to receive(:calculate_file_size).and_return(64_000)
-      expect(transcribe.send(:calculate_max_polling_attempts) * 15).to eq 600
+      expect(transcribe.send(:max_wait)).to eq 600
     end
 
     it "caps the wait at 3 hours" do
       allow(transcribe).to receive(:calculate_file_size).and_return(10_000_000_000)
-      expect(transcribe.send(:calculate_max_polling_attempts) * 15).to eq 10_800
+      expect(transcribe.send(:max_wait)).to eq 10_800
+    end
+
+    it "uses max_wait when given" do
+      transcribe.instance_variable_set(:@max_wait, 1800)
+      expect(transcribe.send(:max_wait)).to eq 1800
     end
   end
 

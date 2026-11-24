@@ -4,6 +4,9 @@ module OmniAI
   module Google
     # Helper methods for transcription functionality
     module TranscribeHelpers # rubocop:disable Metrics/ModuleLength
+      # Seconds between polls of a batch operation.
+      POLL_INTERVAL = 15
+
     private
 
       # @return [String]
@@ -224,13 +227,14 @@ module OmniAI
         # Add authentication if using credentials
         connection = connection.auth("Bearer #{@client.send(:auth).split.last}") if @client.credentials?
 
-        max_attempts = calculate_max_polling_attempts
+        wait = max_wait
+        max_attempts = (wait / POLL_INTERVAL.to_f).ceil
         attempt = 0
 
         loop do
           attempt += 1
 
-          raise StandardError, "Operation timed out after #{max_attempts * 15} seconds" if attempt > max_attempts
+          raise Transcribe::TimeoutError.new(operation_name:, wait:) if attempt > max_attempts
 
           operation_response = connection.get("/v2/#{operation_name}", params: operation_params)
 
@@ -248,7 +252,7 @@ module OmniAI
           return operation_data if operation_data["done"]
 
           # Wait before polling again
-          sleep(15)
+          sleep(POLL_INTERVAL)
         end
       end
 
@@ -494,16 +498,22 @@ module OmniAI
         ::Google::Cloud::Storage.new(project_id:, credentials:)
       end
 
-      # @return [Integer]
-      def calculate_max_polling_attempts
+      # Seconds to poll a batch operation: `max_wait:` when given, else an estimate from the file size.
+      #
+      # @return [Numeric]
+      def max_wait
+        @max_wait || default_max_wait
+      end
+
+      # @return [Numeric]
+      def default_max_wait
         file_size_bytes = calculate_file_size
         assumed_bitrate_bps = 48_000
         estimated_duration_seconds = (file_size_bytes * 8.0) / assumed_bitrate_bps
         estimated_processing_seconds = estimated_duration_seconds * 0.3
         total_wait_seconds = estimated_processing_seconds + 90
         # Batch jobs can queue for minutes regardless of audio length
-        final_wait_seconds = total_wait_seconds.clamp(600, 10_800)
-        (final_wait_seconds / 15).ceil
+        total_wait_seconds.clamp(600, 10_800)
       end
     end
   end
