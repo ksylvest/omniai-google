@@ -260,11 +260,42 @@ RSpec.describe OmniAI::Google::Chat, "caching" do # rubocop:disable RSpec/Descri
     end
 
     context "when the cached request fails with INVALID_ARGUMENT" do
-      it "raises without retrying" do
+      let(:get_url) { "#{base}/cachedContents/abc?key=..." }
+
+      before do
         stub_request(:post, create_url).to_return_json(body: created)
-        stub_request(:post, generate).to_return(status: 400, body: { error: { status: "INVALID_ARGUMENT" } }.to_json)
+        stub_request(:post, generate).with(body: hash_including(cachedContent: "cachedContents/abc"))
+          .to_return(status: 400, body: { error: { status: "INVALID_ARGUMENT" } }.to_json)
+      end
+
+      it "retries once uncached when the cache is gone" do
+        stub_request(:get, get_url).to_return(status: 404, body: "{}")
+        stub_request(:post,
+          generate).with(body: hash_including(system_instruction: { role: "system", parts: [{ text: "Be terse." }] }))
+          .to_return_json(body: ok)
+        expect(client.chat(prompt, model:, cache: true).text).to eql("Hi")
+      end
+
+      it "raises without retrying when the cache exists" do
+        stub_request(:get, get_url).to_return_json(body: created)
         expect { client.chat(prompt, model:, cache: true) }.to raise_error(OmniAI::HTTPError)
         expect(a_request(:post, generate)).to have_been_made.once
+      end
+
+      it "raises without retrying when the check fails" do
+        stub_request(:get, get_url).to_return(status: 500, body: "{}")
+        expect { client.chat(prompt, model:, cache: true) }.to raise_error(OmniAI::HTTPError)
+        expect(a_request(:post, generate)).to have_been_made.once
+      end
+
+      it "retries a stream once uncached when the cache is gone" do
+        stub_request(:get, get_url).to_return(status: 404, body: "{}")
+        stub_request(:post, stream_url).with(body: hash_including(cachedContent: "cachedContents/abc"))
+          .to_return(status: 400, body: { error: { status: "INVALID_ARGUMENT" } }.to_json)
+        stub_request(:post,
+          stream_url).with(body: hash_including(system_instruction: { role: "system", parts: [{ text: "Be terse." }] }))
+          .to_return(body: sse)
+        expect(client.chat(prompt, model:, cache: true, stream: proc {}).text).to eql("Hi")
       end
     end
 
