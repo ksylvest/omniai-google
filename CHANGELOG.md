@@ -6,7 +6,7 @@
 
 - Explicit context caching. `client.caches` creates, gets, updates and deletes `cachedContents`, and `chat(cached_content:)` sends a request against one. `chat(cache: :system | true | { ttl:, scope: })` creates and reuses caches itself, with `config.cache_store` and `config.cache_wait`. Off by default; see the README.
 
-  Verified on Vertex `us` with raw HTTP before this release (2026-11-23): create, get, TTL patch and delete; a cached request with a second user turn; and 400s for a system instruction sent with a cache, a cache under 4,096 tokens, and `gemini-4-hydrogen`.
+  Verified live through the gem on Vertex `us` with `gemini-3.8-flash` (2026-11-23): explicit create, get, update and use; `cache: true` twice with one create; streaming; a tool round trip with one create and both rounds cached; and `gemini-4-hydrogen` falling back uncached after its create 400s, with no second create. A request against a deleted cache returns 400 `INVALID_ARGUMENT` (not 404), so that status is retried only after a `get` of the cache returns 404.
 
 ## 3.25.0
 

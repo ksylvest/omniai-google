@@ -85,6 +85,10 @@ module OmniAI
       # A cached request that gets one of these, or a 404, is retried once uncached (`cache:` only).
       CACHE_GONE_STATUSES = %w[NOT_FOUND FAILED_PRECONDITION].freeze
 
+      # Vertex answers a request against a deleted cache with 400 INVALID_ARGUMENT, the same status as a bad prompt,
+      # so this one is retried only when a `get` of the cache then returns 404.
+      CACHE_CHECK_STATUS = "INVALID_ARGUMENT"
+
       # @param tools [Array<OmniAI::Tool, Symbol, String>, nil]
       #
       # @return [Array<Hash>, nil]
@@ -283,8 +287,26 @@ module OmniAI
         return true if response.status.not_found?
         return false unless response.status.client_error?
 
-        CACHE_GONE_STATUSES.include?(JSON.parse(response.body.to_s).dig("error", "status"))
+        status = error_status(response)
+        CACHE_GONE_STATUSES.include?(status) || (status.eql?(CACHE_CHECK_STATUS) && cache_missing?)
+      end
+
+      # @param response [HTTP::Response]
+      #
+      # @return [String, nil] e.g. "NOT_FOUND"
+      def error_status(response)
+        JSON.parse(response.body.to_s).dig("error", "status")
       rescue JSON::ParserError
+        nil
+      end
+
+      # @return [Boolean] true when a `get` of the cache in use returns 404
+      def cache_missing?
+        Cache.get(@cache_use[:name], client: @client)
+        false
+      rescue HTTPError => e
+        e.response.status.not_found?
+      rescue StandardError
         false
       end
 
